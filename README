@@ -1,0 +1,424 @@
+        NXP LS1028A-rdb Board Support Package
+
+1. About this document
+======================
+
+This document describes common and non-hardware specific information.
+Please refer to README.hardware for hardware specific information.
+
+Dependencies
+------------
+This layer depends on the oe-core version supplied with Wind River
+Linux and the wr-kernel layer.
+
+Maintenance
+-----------
+This layer is maintained by Wind River Systems, Inc.
+Contact <support@windriver.com> or your support representative for more
+information on submitting changes.
+
+Building the nxp-ls1028 layer
+---------------------------
+This layer and wr-kernel layer should be added to bblayers.conf. This
+is done automatically when using the Wind River configure wrapper.
+
+License
+-------
+Copyright (C) 2019-2020 Wind River Systems, Inc.
+
+Source code included in the tree for individual recipes is under the LICENSE
+stated in the associated recipe (.bb file) unless otherwise stated.
+
+The metadata is under the following license unless otherwise stated.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+2. BSP Kernel and Distros
+=========================
+
+The following table summarizes the valid Wind River Linux distros for this BSP.
+'Y' in each content cell stands for supported; 'N' stands for not supported:
+
+  +--------------+-------------+-------------+-------------+
+  | valid/distro |   wrlinux   | wrlinux-cgl | wrlinux-ovp |
+  +--------------+-------------+-------------+-------------+
+  |    valid     |      Y      |      N      |      N      |
+  +--------------+-------------+-------------+-------------+
+
+For the supported kernel type for this BSP, please check the TARGET_SUPPORTED_KTYPES
+by running 'bitbake -e virtual/kernel | grep "^TARGET_SUPPORTED_KTYPES="'.
+
+Note: The preempt-rt ktype is not available for this BSP/Machine at this time.
+
+
+3. Board Specific Patches
+=========================
+To get a list of patches applied to the kernel specific to this BSP,
+along with patch descriptions, use git to see what changed on the default
+kernel (git whatchanged <kernel_type>..<bsp_name>). For example:
+
+	# cd tmp-glibc/work-shared/nxp-ls1028/kernel-source
+	# git whatchanged standard/nxp-ls1028
+
+
+4. Boot Instructions
+====================
+
+The typical u-boot settings apply to these boards. You will need to use
+setenv, printenv and saveenv, to configure, display and store respectively
+your network configuration details and kernel command line. In order to
+TFTP a kernel, you need at a minimum to set the following:
+
+        - ipaddr
+        - gatewayip
+        - netmask
+        - serverip
+        - loadaddr
+        - dtbfile
+        - dtbaddr
+        - ethaddr
+        - eth1addr
+
+Your board may ship with the values for the MAC address of
+the Ethernet interfaces set to the defaults compiled into the
+u-boot image.  You should set the ethaddr, eth1addr and so on
+as per the manufacturer assigned values, usually indicated with
+a sticker on the board.
+
+Target specifics are usually set in the "bootargs" variable, and the
+kernel image is set in the "bootfile" variable. Don't forget that if you
+want these values to be available after a power cycle you will need to run
+the saveenv command.
+
+Typically convenience macros exist that will create a complete bootargs
+command line for the kernel based on variables that contain individual
+settings.  Since these macros exist as env variables themselves, they
+may or may not be present depending on who installed and configured
+u-boot for the board.
+
+The console device for the board is ttyS0 at 115200 baud. For the DTB
+address, 0xa0000000 was used with success by Wind River. The load address
+must be high enough to not interfere with kernel decompression. A value
+of 0x80080000 was used with success for all kernels tested by Wind River.
+
+
+4.1 NFS Root File System
+------------------------
+
+Example settings for the monitor (u-boot) are shown below:
+
+nfsboot=setenv bootargs root=/dev/nfs rw nfsroot=$serverip:$rootpath \
+ip=$ipaddr:$serverip:$gatewayip:$netmask:$hostname:$netdev:off video=video=1920x1080-32@60 \
+console=$consoledev,$baudrate $othbootargs;sf probe && sf read $load_addr 0x900000 0x20000; \
+hdp load $load_addr 0x2000;tftp $kernel_addr_r $kernelfile; \
+tftp $fdt_addr_r $fdtfile;booti $kernel_addr_r - $fdt_addr_r
+ethact=enetc#0
+kernel_addr_r=0x80080000
+fdt_addr_r=a0000000
+gatewayip=128.224.165.1
+netmask=255.255.255.0
+ipaddr=128.224.165.114
+serverip=128.224.165.20
+netdev=eth0
+kernelfile=Image
+fdtfile=fsl-ls1028a-rdb.dtb
+rootpath=/tftpboot/rootfs
+consoledev=ttyS0
+baudrate=115200
+othbootargs=earlycon=uart8250,mmio,0x21c0500
+
+Note:
+  Currently, it seems only SPI nor flash can be the host for bootloader.
+
+
+5. Creating Partitioned Images(WIC)
+===================================
+
+User can use the OpenEmbedded Image Creator, wic, to create the properly
+partitioned image on a SD card. The wic command
+generates partitioned images from existing OpenEmbedded build artifacts.
+User can refer to the below URL to get more WIC details:
+
+http://www.yoctoproject.org/docs/2.6/mega-manual/mega-manual.html#creating-partitioned-images-using-wic
+
+This BSP supports disk images for SD card.
+After build the project, user will get a WIC image under the directory
+tmp-glibc/deploy/images/<bsp name>/ ,such as:
+
+tmp-glibc/deploy/images/nxp-ls1028/wrlinux-image-<rootfs_type>-nxp-ls1028.wic
+
+Then user can write the output image to a SD card:
+
+5.1 Burn images to SD card
+--------------------------
+
+To burn WIC image to SD card, user only need to execute the below command:
+
+# dd if=wrlinux-image-std-nxp-ls1028.wic of=/dev/your_sd_dev
+
+5.2 Set uboot env
+-----------------
+
+Board can boot automatically by set the below uboot environment variables:
+
+=> setenv bootfile Image; setenv fdtfile fsl-ls1028a-rdb.dtb; setenv loadaddr 0x80080000; setenv fdtaddr a0000000;
+
+=> setenv bootargs console=ttyS0,115200n8 root=/dev/mmcblk0p2 rw
+
+=> setenv bootcmd 'fatload mmc 0:1 $loadaddr $bootfile; fatload mmc 0:1 $fdtaddr $fdtfile; booti $loadaddr - $fdtaddr'
+
+=> saveenv; run bootcmd;
+
+
+6. Features
+===========
+
+6.1 DP
+------
+
+To enable DP output, the following two settings are mandatory:
+
+  1). Set video=1920x1080-32@60 in bootargs as one of kernel parameter.
+
+  2). Load dp firmware from u-boot before booting the Linux.
+      # sf probe && sf read $load_addr 0x900000 0x20000; hdp load $load_addr 0x2000;
+
+6.2 Audio
+---------
+
+There is an audio output port J34 in the front panel of the board, and plug in
+your earphone to hear the sound:
+
+6.2.1 Audio playback
+--------------------
+
+	# aplay /usr/share/sounds/alsa/Front_Center.wav
+
+
+6.3 CPU frequency
+------------------
+
+CPU frequency scaling allows the clock speed of the CPU to be changed on the fly.
+
+	# echo userspace > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+Note: Make sure your expected scaling governors are available from your kernel
+      configs
+
+6.4 PTP by ptpd2
+----------------
+
+1) To configure one machine as master: [snip]
+	[host]# sudo ptpd2 -i eno1 -MV
+	ptpd2[9593].startup (notice)  PTPd version 2.3.2 starting
+	ptpd2[9593].startup (info)    Starting ptpd2 daemon with parameters:      ptpd2 -i eno1 -MV
+	ptpd2[9593].startup (info)    Checking configuration
+	ptpd2[9593].startup (info)    Configuration OK
+	ptpd2[9593].startup (info)    Successfully acquired lock on /var/run/ptpd2.lock
+	ptpd2[9593].startup (notice)  PTPd started successfully on eno1 using "masteronly" preset
+	ptpd2[9593].startup (info)    TimingService.PTP0: PTP service init
+	ptpd2[9593].eno1 (notice)    (lstn_init) Now in state: PTP_LISTENING lstn_init,  1
+	ptpd2[9593].eno1 (notice)    (lstn_init) TimingService.PTP0: elected best TimingService
+	ptpd2[9593].eno1 (info)      (lstn_init) TimingService.PTP0: acquired clock control
+	ptpd2[9593].eno1 (notice)    (mst) Now in state: PTP_MASTER, Best master: 54bf64fffe7f3f08(unknown)/1 (self)
+	ptpd2[9593].eno1 (info)      (mst) TimingService.PTP0: PTP service shutdown
+	ptpd2[9593].eno1 (info)      (___) TimingService: Timing domain shutdown complete
+	ptpd2[9593].eno1 (notice)    (___) Shutdown on close signal
+
+2) Another as slave: [snip]
+
+	root@nxp-ls1028:~# ptpd2 -i eth0 -sV --section:kp=0.32 --section:ki=0.05
+	ptpd2[701].startup (warning)   (___) Unknown configuration entry: section:kp - setting will be ignored
+	ptpd2[701].startup (warning)   (___) Unknown configuration entry: section:ki - setting will be ignored
+	ptpd2[701].startup (info)      (___) Configuration OK
+	ptpd2[701].startup (info)      (___) Successfully acquired lock on /var/run/ptpd2.lock
+	ptpd2[701].startup (notice)    (___) PTPDv2 started successfully on eth0 using "slaveonly" preset (PID 701)
+	ptpd2[701].startup (info)      (___) TimingService.PTP0: PTP service init
+	ptpd2[701].eth0 (info)      (init) Observed_drift loaded from kernel: 0 ppb
+	ptpd2[701].eth0 (notice)    (lstn_init) Now in state: PTP_LISTENING
+	ptpd2[701].eth0 (notice)    (lstn_init) TimingService.PTP0: elected best TimingService
+	ptpd2[701].eth0 (info)      (lstn_init) TimingService.PTP0: acquired clock control
+	ptpd2[701].eth0 (notice)    (slv) Now in state: PTP_SLAVE, Best master: 54bf64fffe7f3f08(unknown)/1 (IPv4:128.224.162.211)
+	ptpd2[701].eth0 (notice)    (slv) Received first Sync from Master
+	ptpd2[701].eth0 (critical)  (slv) Offset above 1 second. Clock will step.
+	ptpd2[701].eth0 (warning)   (slv) Stepped the system clock to: 05/07/19 06:47:53.126656311
+	ptpd2[701].eth0 (notice)    (lstn_reset) Now in state: PTP_LISTENING
+	ptpd2[701].eth0 (info)      (lstn_reset) New best master selected: 54bf64fffe7f3f08(unknown)/1
+	ptpd2[701].eth0 (notice)    (slv) Now in state: PTP_SLAVE, Best master: 54bf64fffe7f3f08(unknown)/1 (IPv4:128.224.162.211)
+	ptpd2[701].eth0 (notice)    (slv) Received first Sync from Master
+	 slv, 54bf64fffe7f3f08(unknown)/1,  0.000000000, -0.000002065,  0.000000000, -0.000004131, 0.000000000, S, 0.000000000, 0, 0.000000000, 0, 0, 0, -0.000004131,  0.000000000
+	 slv, 54bf64fffe7f3f08(unknown)/1,  0.000000000,  0.000000006,  0.000000000,  0.000004143, -2.065000000, S, 0.000000000, 0, 0.000000000, 0, 0, 0,  0.000004143,  0.000000000
+	 slv, 54bf64fffe7f3f08(unknown)/1,  0.000035081,  0.000000006,  0.000136182,  0.000004143, -2.059000000, D, 0.000000000, 0, 0.000000000, 0, 0, 0,  0.000004143,  0.000136182
+
+6.5 PCIe SR-IOV 
+--------------
+
+  # ifconfig -a|grep eth|wc -l
+    7
+
+  # cd /sys/bus/pci/devices/0000:00:00.0
+  # echo 1 > sriov_numvfs
+    iommu: Adding device 0000:00:01.0 to group 9
+    fsl_enetc_vf 0000:00:01.0: enabling device (0000 -> 0002)
+    fsl_enetc_vf 0000:00:01.0 eth7: ENETC VF driver v0.9
+  # ifconfig -a|grep eth|wc -l
+    8
+  # ethtool -i eth0
+    driver: fsl_enetc
+    version:
+    firmware-version:
+    expansion-rom-version:
+    bus-info: 0000:00:00.0
+    supports-statistics: yes
+    supports-test: no
+    supports-eeprom-access: no
+    supports-register-dump: yes
+    supports-priv-flags: no
+
+  # ethtool -i eth7
+    driver: fsl_enetc_vf
+    version:
+    firmware-version:
+    expansion-rom-version:
+    bus-info: 0000:00:01.0
+    supports-statistics: yes
+    supports-test: no
+    supports-eeprom-access: no
+    supports-register-dump: yes
+    supports-priv-flags: no
+
+6.6 qdma
+--------
+
+  # echo  dma1chan0 > /sys/module/dmatest/parameters/channel
+  # echo 2000 > /sys/module/dmatest/parameters/timeout
+  # echo 100 > /sys/module/dmatest/parameters/iterations
+  # echo 1 > /sys/module/dmatest/parameters/run
+    dmatest: Started 1 threads using dma1chan0
+    dmatest: dma1chan0-copy0: summary 100 tests, 0 failures 8838 iops 75481 KB/s (0)
+
+6.7 ina220 & sa56004
+--------------------
+
+  # ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-004c/hwmon/hwmon1
+
+  # ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-3/3-0040/hwmon/hwmon
+    curr1_input
+    in0_input
+    in1_input
+    name
+    power
+    power1_input
+    shunt_resistor
+
+6.8 switch
+----------
+
+  # ip link add name switch type bridge
+  # ip link set switch up
+  # ifconfig
+  eth0      Link encap:Ethernet  HWaddr 00:04:9f:05:ef:f6
+            inet addr:128.224.162.145  Bcast:128.224.163.255  Mask:255.255.254.0
+            inet6 addr: fe80::204:9fff:fe05:eff6/64 Scope:Link
+            UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+            RX packets:4069 errors:0 dropped:0 overruns:0 frame:0
+            TX packets:347 errors:0 dropped:0 overruns:0 carrier:0
+            collisions:0 txqueuelen:1000
+            RX bytes:774780 (756.6 KiB)  TX bytes:51918 (50.7 KiB)
+
+  lo        Link encap:Local Loopback
+            inet addr:127.0.0.1  Mask:255.0.0.0
+            inet6 addr: ::1/128 Scope:Host
+            UP LOOPBACK RUNNING  MTU:65536  Metric:1
+            RX packets:140 errors:0 dropped:0 overruns:0 frame:0
+            TX packets:140 errors:0 dropped:0 overruns:0 carrier:0
+            collisions:0 txqueuelen:1000
+            RX bytes:8378 (8.1 KiB)  TX bytes:8378 (8.1 KiB)
+
+  switch    Link encap:Ethernet  HWaddr 1e:55:99:01:c8:01
+            inet6 addr: fe80::1c55:99ff:fe01:c801/64 Scope:Link
+            UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+            RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+            TX packets:5 errors:0 dropped:0 overruns:0 carrier:0
+            collisions:0 txqueuelen:1000
+            RX bytes:0 (0.0 B)  TX bytes:426 (426.0 B)
+
+  # ip link set eth2 master switch && ip link set eth2 up
+  switch: port 1(eth2) entered blocking state
+  switch: port 1(eth2) entered disabled state
+  device eth2 entered promiscuous mode
+  Vitesse VSC8514 1f8100000:10: attached PHY driver [Vitesse VSC8514] (mii_bus:phy_addr=1f8100000:10, irq=POLL)
+  IPv6: ADDRCONF(NETDEV_UP): eth2: link is not ready
+  8021q: adding VLAN 0 to HW filter on device eth2
+  # ip link set eth3 master switch && ip link set eth3 up
+  switch: port 2(eth3) entered disabled state
+  device eth3 entered promiscuous mode
+  ink set eth6 up
+  Vitesse VSC8514 1f8100000:11: attached PHY driver [Vitesse VSC8514] (mii_bus:phy_addr=1f8100000:11, irq=POLL)
+  IPv6: ADDRCONF(NETDEV_UP): eth3: link is not ready
+  8021q: adding VLAN 0 to HW filter on device eth3
+  # ip link set eth4 master switch && ip link set eth4 up
+  switch: port 3(eth4) entered blocking state
+  switch: port 3(eth4) entered disabled state
+  device eth4 entered promiscuous mode
+  Vitesse VSC8514 1f8100000:12: attached PHY driver [Vitesse VSC8514] (mii_bus:phy_addr=1f8100000:12, irq=POLL)
+
+  IPv6: ADDRCONF(NETDEV_UP): eth4: link is not ready
+  8021q: adding VLAN 0 to HW filter on device eth4
+  # ip link set eth5 master switch && ip link set eth5 up
+  switch: port 4(eth5) entered blocking state
+  switch: port 4(eth5) entered disabled state
+  device eth5 entered promiscuous mode
+  Vitesse VSC8514 1f8100000:13: attached PHY driver [Vitesse VSC8514] (mii_bus:phy_addr=1f8100000:13, irq=POLL)
+  IPv6: ADDRCONF(NETDEV_UP): eth5: link is not ready
+  8021q: adding VLAN 0 to HW filter on device eth5
+
+  # ip link set eth6 master switch && ip link set eth6 up
+  Writes:  Total: 336323114  Max/Min: 0/0   Fail: 0
+  switch: port 5(eth6) entered blocking state
+  switch: port 5(eth6) entered disabled state
+  device eth6 entered promiscuous mode
+  Generic PHY fixed-0:01: attached PHY driver [Generic PHY] (mii_bus:phy_addr=fixed-0:01, irq=POLL)
+  IPv6: ADDRCONF(NETDEV_UP): eth6: link is not ready
+  8021q: adding VLAN 0 to HW filter on device eth6
+  switch: port 5(eth6) entered blocking state
+  switch: port 5(eth6) entered forwarding state
+  switch: port 5(eth6) entered disabled state
+
+  root@nxp-ls1028:~# brctl show switch
+  bridge name     bridge id               STP enabled     interfaces
+  switch          8000.c634cb969080       no              eth2
+                                                          eth3
+                                                          eth4
+                                                          eth5
+                                                          eth6
+
+
+6.9 TSN
+-------
+
+To get more details about TSN feature, please refer to instructions
+mentioned in the sections
+
+        "Time Sensitive Networking (TSN)"
+
+in the NXP's SDK user manual
+
+        "Layerscape Software Development Kit 19.09 Documentation.pdf".
+
