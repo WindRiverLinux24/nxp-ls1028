@@ -10,11 +10,7 @@ inherit pkgconfig
 SRC_URI += "git://source.codeaurora.org/external/qoriq/qoriq-components/tsntool.git"
 SRCREV = "30a0320eb4a1798ac3d6258a2e02d863e60a1582"
 
-SRC_URI[md5sum] = "8090ddedfd29f5cddb648ab00cbe74d1"
-SRC_URI[sha256sum] = "5e8202b8f3fe2124b37427e8b648abe00972fcc303521bbdf1f9b35bbef4739f"
-
 S = "${WORKDIR}/git"
-S = "${WORKDIR}/tsntool"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
