@@ -422,3 +422,36 @@ in the NXP's SDK user manual
 
         "Layerscape Software Development Kit 19.09 Documentation.pdf".
 
+6.10 PCIe
+---------
+
+The LS1028ARDB has two PCIe interfaces. They are connected to the M.2
+connecter with E-Key on the LS1028ARDB Board.
+
+Can choose the below PCIe peripheral to validate:
+
+        Intel Corporation Wireless 7265
+
+Can validate using the following steps:
+
+Simply add line as follows to ${buildprj}/build/conf/local.conf:
+
+        KERNEL_FEATURES_append = " features/iwlwifi/iwlwifi.scc"
+
+This will include the iwlwifi and mac80211 kernel modules in
+the root file system.
+
+Built and install them:
+
+        # bitbake wrlinux-image-xxx
+
+Copy relevant WiFi card firmware (Intel 7265 WiFi firmware: iwlwifi-7265D-10.ucode)
+to /lib/firmware of the target image.
+
+Execute the following commands to validate the WiFi cards:
+
+        # ifconfig wlan<idx> up
+        # iw wlan<idx> scan
+        # iw dev wlan<idx> connect <AP essid>
+        # dhclient wlan<idx>
+        # ping <AP address> -i wlan<idx> -c 5
