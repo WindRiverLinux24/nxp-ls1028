@@ -189,84 +189,116 @@ Board can boot automatically by set the below uboot environment variables:
 6. Features
 ===========
 
-6.1 DP
-------
-
-To enable DP output, the following two settings are mandatory:
-
-  1). Set video=1920x1080-32@60 in bootargs as one of kernel parameter.
-
-  2). Load dp firmware from u-boot before booting the Linux.
-      # sf probe && sf read $load_addr 0x900000 0x20000; hdp load $load_addr 0x2000;
-
-6.2 Audio
+6.1 Audio
 ---------
 
-There is an audio output port J34 in the front panel of the board, and plug in
-your earphone to hear the sound:
-
-6.2.1 Audio playback
---------------------
+The integrated I2S module on LS1028ardb is NXP's Synchronous Audio
+Interface(SAI). To enable SAI, the rcw binary should be changed from
+default rcw to rcw_1300_audio.rcw, and set EC1_SAI4_5_PMUX to 2. Besides,
+run the following command at U-Boot prompt:
+    i2c mw 0x66 0x53 0x4
+to set BRDCFG3[2] = 1 and set the switch SW5[8] on. Then, the audio will
+work normal. There is an audio output port J34 in the front panel of the
+board, for testing, you can plug in your earphone to hear the sound by the
+following command:
 
 	# aplay /usr/share/sounds/alsa/Front_Center.wav
 
+6.1.1 Steps to build RCW
+------------------------
+Since SAI need rcw_1300_audio.rcw, this section describes how to build a
+firmware including the rcw_1300_audio.rcw.
 
-6.3 CPU frequency
+Firstly, download the LSDK19.09 flexbuilder tool package from the url:
+    https://nxp.flexnetoperations.com/control/frse/download?agree=Accept&element=11352297
+
+Choose the flexbuild_lsdk1909_update_311219.tgz to download.
+After this, build a full firmware for LS1028ardb by command: 
+    flex-builder -a arm64 -m ls1028ardb
+when build done, set
+    EC1_SAI4_5_PMUX=2
+
+in the following file:
+    flexbuild_lsdk1909_update_311219/packages/firmware/rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.rcw
+
+and set rcw_xspi=build/firmware/rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
+in configs/board/ls1028ardb/manifest.
+
+Secondly, clean the last build outcomes of flexbuilder. Then flex-builder
+a new full firmware which will include the rcw_1300_audio.rcw. the outcome
+firmware should be firmware_ls1028ardb_uboot_xspiboot.img in build/images.
+For further use of flex-builder, please refer to 
+    flexbuild_lsdk1909_update_311219/docs.
+
+Thirdly, write the firmware_ls1028ardb_uboot_xspiboot.img into xspi flash
+on the board at address 0x00 like the following:
+    tftp 0xa0000000 tftp-server-patch/firmware_ls1028ardb_uboot_xspiboot.img
+    sf probe 0:0
+    sf erase 0 +$filesize && sf write 0xa0000000 0 $filesize
+    qixis_reset
+
+Finally boot the board. The SAI should work.
+
+6.2 CPU frequency
 ------------------
 
-CPU frequency scaling allows the clock speed of the CPU to be changed on the fly.
+CPU frequency scaling allows the clock speed of the CPU to be
+changed on the fly.
 
-	# echo userspace > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+    # echo userspace > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
-Note: Make sure your expected scaling governors are available from your kernel
-      configs
+Note: 
+    Make sure your expected scaling governors are available from your
+    kernel configs
 
-6.4 PTP by ptpd2
+6.3 PTP by ptp4l
 ----------------
 
-1) To configure one machine as master: [snip]
-	[host]# sudo ptpd2 -i eno1 -MV
-	ptpd2[9593].startup (notice)  PTPd version 2.3.2 starting
-	ptpd2[9593].startup (info)    Starting ptpd2 daemon with parameters:      ptpd2 -i eno1 -MV
-	ptpd2[9593].startup (info)    Checking configuration
-	ptpd2[9593].startup (info)    Configuration OK
-	ptpd2[9593].startup (info)    Successfully acquired lock on /var/run/ptpd2.lock
-	ptpd2[9593].startup (notice)  PTPd started successfully on eno1 using "masteronly" preset
-	ptpd2[9593].startup (info)    TimingService.PTP0: PTP service init
-	ptpd2[9593].eno1 (notice)    (lstn_init) Now in state: PTP_LISTENING lstn_init,  1
-	ptpd2[9593].eno1 (notice)    (lstn_init) TimingService.PTP0: elected best TimingService
-	ptpd2[9593].eno1 (info)      (lstn_init) TimingService.PTP0: acquired clock control
-	ptpd2[9593].eno1 (notice)    (mst) Now in state: PTP_MASTER, Best master: 54bf64fffe7f3f08(unknown)/1 (self)
-	ptpd2[9593].eno1 (info)      (mst) TimingService.PTP0: PTP service shutdown
-	ptpd2[9593].eno1 (info)      (___) TimingService: Timing domain shutdown complete
-	ptpd2[9593].eno1 (notice)    (___) Shutdown on close signal
+1) To configure one machine as master:
 
-2) Another as slave: [snip]
+    root@nxp-ls1028:~# ptp4l -i eth0 -p /dev/ptp0 -m
+    ptp4l[175.037]: selected /dev/ptp0 as PTP clock
+    ptp4l[175.038]: driver changed our HWTSTAMP options
+    ptp4l[175.038]: tx_type   1 not 1
+    ptp4l[175.038]: rx_filter 1 not 12
+    ptp4l[175.038]: port 1: INITIALIZING to LISTENING on INITIALIZE
+    ptp4l[175.038]: port 0: INITIALIZING to LISTENING on INITIALIZE
+    ptp4l[175.038]: port 1: link up
+    ptp4l[182.126]: port 1: LISTENING to MASTER on ANNOUNCE_RECEIPT_TIMEOUT_EXPIRES
+    ptp4l[182.126]: selected best master clock 720ff8.fffe.2e3c31
+    ptp4l[182.126]: assuming the grand master role
 
-	root@nxp-ls1028:~# ptpd2 -i eth0 -sV --section:kp=0.32 --section:ki=0.05
-	ptpd2[701].startup (warning)   (___) Unknown configuration entry: section:kp - setting will be ignored
-	ptpd2[701].startup (warning)   (___) Unknown configuration entry: section:ki - setting will be ignored
-	ptpd2[701].startup (info)      (___) Configuration OK
-	ptpd2[701].startup (info)      (___) Successfully acquired lock on /var/run/ptpd2.lock
-	ptpd2[701].startup (notice)    (___) PTPDv2 started successfully on eth0 using "slaveonly" preset (PID 701)
-	ptpd2[701].startup (info)      (___) TimingService.PTP0: PTP service init
-	ptpd2[701].eth0 (info)      (init) Observed_drift loaded from kernel: 0 ppb
-	ptpd2[701].eth0 (notice)    (lstn_init) Now in state: PTP_LISTENING
-	ptpd2[701].eth0 (notice)    (lstn_init) TimingService.PTP0: elected best TimingService
-	ptpd2[701].eth0 (info)      (lstn_init) TimingService.PTP0: acquired clock control
-	ptpd2[701].eth0 (notice)    (slv) Now in state: PTP_SLAVE, Best master: 54bf64fffe7f3f08(unknown)/1 (IPv4:128.224.162.211)
-	ptpd2[701].eth0 (notice)    (slv) Received first Sync from Master
-	ptpd2[701].eth0 (critical)  (slv) Offset above 1 second. Clock will step.
-	ptpd2[701].eth0 (warning)   (slv) Stepped the system clock to: 05/07/19 06:47:53.126656311
-	ptpd2[701].eth0 (notice)    (lstn_reset) Now in state: PTP_LISTENING
-	ptpd2[701].eth0 (info)      (lstn_reset) New best master selected: 54bf64fffe7f3f08(unknown)/1
-	ptpd2[701].eth0 (notice)    (slv) Now in state: PTP_SLAVE, Best master: 54bf64fffe7f3f08(unknown)/1 (IPv4:128.224.162.211)
-	ptpd2[701].eth0 (notice)    (slv) Received first Sync from Master
-	 slv, 54bf64fffe7f3f08(unknown)/1,  0.000000000, -0.000002065,  0.000000000, -0.000004131, 0.000000000, S, 0.000000000, 0, 0.000000000, 0, 0, 0, -0.000004131,  0.000000000
-	 slv, 54bf64fffe7f3f08(unknown)/1,  0.000000000,  0.000000006,  0.000000000,  0.000004143, -2.065000000, S, 0.000000000, 0, 0.000000000, 0, 0, 0,  0.000004143,  0.000000000
-	 slv, 54bf64fffe7f3f08(unknown)/1,  0.000035081,  0.000000006,  0.000136182,  0.000004143, -2.059000000, D, 0.000000000, 0, 0.000000000, 0, 0, 0,  0.000004143,  0.000136182
+2) Another as slave:
 
-6.5 PCIe SR-IOV 
+    root@nxp-ls1028:~# ptp4l -i eth0 -p /dev/ptp0 -m
+    ptp4l[233.257]: selected /dev/ptp0 as PTP clock
+    ptp4l[233.258]: driver changed our HWTSTAMP options
+    ptp4l[233.258]: tx_type   1 not 1
+    ptp4l[233.258]: rx_filter 1 not 12
+    ptp4l[233.258]: port 1: INITIALIZING to LISTENING on INITIALIZE
+    ptp4l[233.258]: port 0: INITIALIZING to LISTENING on INITIALIZE
+    ptp4l[233.258]: port 1: link up
+    ptp4l[233.816]: port 1: new foreign master 22fa84.fffe.480bac-1
+    ptp4l[237.816]: selected best master clock 22fa84.fffe.480bac
+    ptp4l[237.816]: port 1: LISTENING to UNCALIBRATED on RS_SLAVE
+    ptp4l[239.815]: master offset -5567669943 s0 freq      +0 path delay     18980
+    ptp4l[240.815]: master offset -5567678538 s1 freq   -8595 path delay     20350
+    ptp4l[241.815]: master offset     -11555 s2 freq  -20150 path delay     20350
+    ptp4l[241.815]: port 1: UNCALIBRATED to SLAVE on MASTER_CLOCK_SELECTED
+    ptp4l[242.815]: master offset      23910 s2 freq  +11849 path delay     20350
+    ptp4l[243.815]: master offset       9475 s2 freq   +4587 path delay     20350
+    ptp4l[244.815]: master offset       7625 s2 freq   +5579 path delay     20350
+    ptp4l[245.815]: master offset     -23970 s2 freq  -23728 path delay     21720
+    ptp4l[246.815]: master offset      15980 s2 freq   +9031 path delay     20350
+    ptp4l[247.815]: master offset       6085 s2 freq   +3930 path delay     20715
+    ptp4l[248.816]: master offset      -1185 s2 freq   -1515 path delay     20715
+    ptp4l[249.816]: master offset       5018 s2 freq   +4333 path delay     18982
+    ptp4l[250.816]: master offset      -8420 s2 freq   -7600 path delay     20715
+    ptp4l[251.816]: master offset     -20343 s2 freq  -22049 path delay     19848
+    ptp4l[252.816]: master offset      22082 s2 freq  +14273 path delay     19848
+    ptp4l[253.816]: master offset     -18512 s2 freq  -19696 path delay     21217
+
+6.4 PCIe SR-IOV 
 --------------
 
   # ifconfig -a|grep eth|wc -l
@@ -303,17 +335,8 @@ Note: Make sure your expected scaling governors are available from your kernel
     supports-register-dump: yes
     supports-priv-flags: no
 
-6.6 qdma
---------
 
-  # echo  dma1chan0 > /sys/module/dmatest/parameters/channel
-  # echo 2000 > /sys/module/dmatest/parameters/timeout
-  # echo 100 > /sys/module/dmatest/parameters/iterations
-  # echo 1 > /sys/module/dmatest/parameters/run
-    dmatest: Started 1 threads using dma1chan0
-    dmatest: dma1chan0-copy0: summary 100 tests, 0 failures 8838 iops 75481 KB/s (0)
-
-6.7 ina220 & sa56004
+6.5 ina220 & sa56004
 --------------------
 
   # ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-004c/hwmon/hwmon1
@@ -327,102 +350,91 @@ Note: Make sure your expected scaling governors are available from your kernel
     power1_input
     shunt_resistor
 
-6.8 switch
+6.6 switch
 ----------
 
+On the LS1028A SoC, there is a L2Switch which is connected to the host CPU
+via two SoC internal MAC-to-MAC port connections between the switch and
+corresponding ENETC Ethernet endpoints:
+
+• ENETC Port 2(eth1) and switch port #4(eth7)
+• ENETC Port 3(eth2) and switch port #5(eth8)
+
+Following the below steps can bring up the switch ports and test ping between
+two boards:
+
+On Board1:
   # ip link add name switch type bridge
   # ip link set switch up
-  # ifconfig
-  eth0      Link encap:Ethernet  HWaddr 00:04:9f:05:ef:f6
-            inet addr:128.224.162.145  Bcast:128.224.163.255  Mask:255.255.254.0
-            inet6 addr: fe80::204:9fff:fe05:eff6/64 Scope:Link
-            UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-            RX packets:4069 errors:0 dropped:0 overruns:0 frame:0
-            TX packets:347 errors:0 dropped:0 overruns:0 carrier:0
-            collisions:0 txqueuelen:1000
-            RX bytes:774780 (756.6 KiB)  TX bytes:51918 (50.7 KiB)
-
-  lo        Link encap:Local Loopback
-            inet addr:127.0.0.1  Mask:255.0.0.0
-            inet6 addr: ::1/128 Scope:Host
-            UP LOOPBACK RUNNING  MTU:65536  Metric:1
-            RX packets:140 errors:0 dropped:0 overruns:0 frame:0
-            TX packets:140 errors:0 dropped:0 overruns:0 carrier:0
-            collisions:0 txqueuelen:1000
-            RX bytes:8378 (8.1 KiB)  TX bytes:8378 (8.1 KiB)
-
-  switch    Link encap:Ethernet  HWaddr 1e:55:99:01:c8:01
-            inet6 addr: fe80::1c55:99ff:fe01:c801/64 Scope:Link
-            UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-            RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-            TX packets:5 errors:0 dropped:0 overruns:0 carrier:0
-            collisions:0 txqueuelen:1000
-            RX bytes:0 (0.0 B)  TX bytes:426 (426.0 B)
-
-  # ip link set eth2 master switch && ip link set eth2 up
-  switch: port 1(eth2) entered blocking state
-  switch: port 1(eth2) entered disabled state
-  device eth2 entered promiscuous mode
-  Vitesse VSC8514 1f8100000:10: attached PHY driver [Vitesse VSC8514] (mii_bus:phy_addr=1f8100000:10, irq=POLL)
-  IPv6: ADDRCONF(NETDEV_UP): eth2: link is not ready
-  8021q: adding VLAN 0 to HW filter on device eth2
   # ip link set eth3 master switch && ip link set eth3 up
-  switch: port 2(eth3) entered disabled state
-  device eth3 entered promiscuous mode
-  ink set eth6 up
-  Vitesse VSC8514 1f8100000:11: attached PHY driver [Vitesse VSC8514] (mii_bus:phy_addr=1f8100000:11, irq=POLL)
-  IPv6: ADDRCONF(NETDEV_UP): eth3: link is not ready
-  8021q: adding VLAN 0 to HW filter on device eth3
   # ip link set eth4 master switch && ip link set eth4 up
-  switch: port 3(eth4) entered blocking state
-  switch: port 3(eth4) entered disabled state
-  device eth4 entered promiscuous mode
-  Vitesse VSC8514 1f8100000:12: attached PHY driver [Vitesse VSC8514] (mii_bus:phy_addr=1f8100000:12, irq=POLL)
-
-  IPv6: ADDRCONF(NETDEV_UP): eth4: link is not ready
-  8021q: adding VLAN 0 to HW filter on device eth4
   # ip link set eth5 master switch && ip link set eth5 up
-  switch: port 4(eth5) entered blocking state
-  switch: port 4(eth5) entered disabled state
-  device eth5 entered promiscuous mode
-  Vitesse VSC8514 1f8100000:13: attached PHY driver [Vitesse VSC8514] (mii_bus:phy_addr=1f8100000:13, irq=POLL)
-  IPv6: ADDRCONF(NETDEV_UP): eth5: link is not ready
-  8021q: adding VLAN 0 to HW filter on device eth5
-
   # ip link set eth6 master switch && ip link set eth6 up
-  Writes:  Total: 336323114  Max/Min: 0/0   Fail: 0
-  switch: port 5(eth6) entered blocking state
-  switch: port 5(eth6) entered disabled state
-  device eth6 entered promiscuous mode
-  Generic PHY fixed-0:01: attached PHY driver [Generic PHY] (mii_bus:phy_addr=fixed-0:01, irq=POLL)
-  IPv6: ADDRCONF(NETDEV_UP): eth6: link is not ready
-  8021q: adding VLAN 0 to HW filter on device eth6
-  switch: port 5(eth6) entered blocking state
-  switch: port 5(eth6) entered forwarding state
-  switch: port 5(eth6) entered disabled state
+  # ip link set eth7 master switch && ip link set eth7 up
+  # ip link set eth8 master switch && ip link set eth8 up
+  # ip link set eth1 up
+  # ip link set eth2 up
+  # ip addr add 192.168.2.1/24 dev switch
+  # ifconfig eth1 192.168.2.9/24
 
-  root@nxp-ls1028:~# brctl show switch
-  bridge name     bridge id               STP enabled     interfaces
-  switch          8000.c634cb969080       no              eth2
-                                                          eth3
-                                                          eth4
-                                                          eth5
-                                                          eth6
+On Board2:
+  # ip link add name switch type bridge
+  # ip link set switch up
+  # ip link set eth3 master switch && ip link set eth3 up
+  # ip link set eth4 master switch && ip link set eth4 up
+  # ip link set eth5 master switch && ip link set eth5 up
+  # ip link set eth6 master switch && ip link set eth6 up
+  # ip link set eth7 master switch && ip link set eth7 up
+  # ip link set eth8 master switch && ip link set eth8 up
+  # ip link set eth1 up
+  # ip link set eth2 up
+  # ip addr add 192.168.2.11/24 dev switch
+  # ifconfig eth1 192.168.2.19/24
+
+From Board1 ping Board2:
+  # root@nxp-ls1028:~# ping 192.168.2.19
+    PING 192.168.2.19 (192.168.2.19) 56(84) bytes of data.
+    64 bytes from 192.168.2.19: icmp_seq=1 ttl=64 time=0.342 ms
+    64 bytes from 192.168.2.19: icmp_seq=2 ttl=64 time=0.165 ms
+    64 bytes from 192.168.2.19: icmp_seq=3 ttl=64 time=0.172 ms
+    64 bytes from 192.168.2.19: icmp_seq=4 ttl=64 time=0.191 ms
+    ^C
+    --- 192.168.2.19 ping statistics ---
+    4 packets transmitted, 4 received, 0% packet loss, time 3062ms
+    root@nxp-ls1028:~#
 
 
-6.9 TSN
+6.7 TSN
 -------
+
+6.7.1 Overview
+--------------
+
+Time Sensitive Network(TSN) is the IEEE802.1Q defined standard technology
+to provide deterministic messaging on standard ethernet and is started
+from AVB – Audio/Video Bridging. Currently, LS1028ardb enables the TSN
+feature on both ENETC and switch.
+
+For TSN on ENETC, the following protocols have been tested:
+    1. IEEE 802.1Qbv
+    2. IEEE 802.1Qci
+    3. IEEE 802.1Qav
+
+For TSN on switch, the following protocols have been tested:
+    1. IEEE 802.1Qbv
+    2. IEEE 802.1AS
+
 
 To get more details about TSN feature, please refer to instructions
 mentioned in the sections
 
-        "Time Sensitive Networking (TSN)"
+    "Time Sensitive Networking (TSN)"
 
 in the NXP's SDK user manual
 
-        "Layerscape Software Development Kit 19.09 Documentation.pdf".
+    "Layerscape Software Development Kit 19.09 Documentation.pdf (REV 19.09_311219)".
 
-6.10 PCIe
+6.8 PCIe
 ---------
 
 The LS1028ARDB has two PCIe interfaces. They are connected to the M.2
@@ -455,3 +467,44 @@ Execute the following commands to validate the WiFi cards:
         # iw dev wlan<idx> connect <AP essid>
         # dhclient wlan<idx>
         # ping <AP address> -i wlan<idx> -c 5
+
+6.9 FlexTimer(FTM)
+------------------
+
+The FTM is used as the wakeup source to wake up system in deep sleep 
+on LS1028ardb. Please following the steps below to test it:
+
+    1> get sleep status to check whether system support deep sleep mode 
+    root@nxp-ls1028:~# cat /sys/power/mem_sleep
+    s2idle [deep]
+
+    2> set deep sleep mode when suspend to memery, it's optional
+    root@nxp-ls1028:~# echo deep > /sys/power/mem_sleep
+
+    3> wake up system in deep sleep mode afer 10 seconds
+    echo 0 > /sys/class/rtc/rtc1/wakealarm; \
+    echo +10>/sys/class/rtc/rtc1/wakealarm && \
+    echo mem > /sys/power/state
+
+    4> the results should be like the followings:
+    PM: suspend entry (deep)
+    Filesystems sync: 0.000 seconds
+    Freezing user space processes ... (elapsed 0.001 seconds) done.
+    OOM killer disabled.
+    Freezing remaining freezable tasks ... (elapsed 0.093 seconds) done.
+    printk: Suspending console(s) (use no_console_suspend to debug)
+    Disabling non-boot CPUs ...
+    IRQ 121: no longer affine to CPU1
+    CPU1: shutdown
+    psci: CPU1 killed (polled 4 ms)
+    Enabling non-boot CPUs ...
+    Detected PIPT I-cache on CPU1
+    GICv3: CPU1: found redistributor 1 region 0:0x0000000006060000
+    CPU1: Booted secondary processor 0x0000000001 [0x410fd083]
+    CPU1 is up
+    fsl_enetc 0000:00:00.0 eth0: Link is Down
+    OOM killer enabled.
+    Restarting tasks ... done.
+    PM: suspend exit
+    ata1: SATA link down (SStatus 0 SControl 300)
+    fsl_enetc 0000:00:00.0 eth0: Link is Up - 100Mbps/Full - flow control off

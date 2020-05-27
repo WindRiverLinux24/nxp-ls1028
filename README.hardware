@@ -21,7 +21,7 @@ This BSP supports the following boards:
 2. Change History
 =================
 
-  - 2020/05 (LINUXPG-234): Wind River Linux 10.19 RCPL08, based on LSDK1909.
+  - 2020/05 (LINUXPG-234): Wind River Linux 10.19 RCPL08, based on LSDK1909 (REV 19.09_311219).
 
 
 3. BSP Features
@@ -35,7 +35,6 @@ the corresponding h/w features exist.
 
   o General Platform
 	+ Freescale eDMA engine
-	+ Freescale QDMA engine
 	+ IOMMU
 
   o Bus
@@ -55,7 +54,6 @@ the corresponding h/w features exist.
 
   o User_Interface_Multimedia
 	+ Audio SAI
-	+ DP
 
   o Graphic
 	+ DRM
@@ -75,7 +73,8 @@ Same as SDK, the following features are not supported and validated:
   x QSPI emulator (TFM-110-02-S-D-SN-K-TR) 
   x Watchdog (Known issue)
     https://community.nxp.com/message/1134998?commentID=1134998&et=watches.email.thread
-
+  x DP (DisplayPort)
+  x Freescale QDMA engine
 
 4. BSP Notes
 ============
@@ -92,7 +91,7 @@ in a different environment it may possibly have some issues.
 	Processor:		LS1028AE Rev1.0 (0x870b0010)
 	Board:			LS1028AE Rev1.0-RDB, Version: A
 	BootLoader:		U-Boot
-	BootLoader Version:	U-Boot 2018.03
+	BootLoader Version:	U-Boot 2019.04-gce862bb2d2
 
 Here is the board link:
   https://www.nxp.com/support/developer-resources/software-development-tools/qoriq-developer-resources/ls1028a-reference-design-board:LS1028ARDB
@@ -117,3 +116,19 @@ can not be enabled at the same time, and the M.2 J18 connector is the default
 one from hardware level. So this is why SATA is not validated. Please refer to
 the vendor for more information.
 
+4.4 TSN 802.1AS on ENETC not supported
+--------------------------------------
+
+According to the LSDK19.09-REV 19.09_311219, the 802.1AS feature is not supported
+currently. When you boot two LS1028ardb boards to test it by the following command:
+    ptp4l -i eth0 -p /dev/ptp0 -f gPTP.cfg -m
+Both sides will show the info of "assuming the grand master role". But this issue does
+not infect the other TSN features on ENETC. And this will be fixed later.
+
+4.5 TSN SFI maxSDU feature on switch not supported
+--------------------------------------------------
+
+According to the LSDK19.09-REV 19.09_311219, the 802.1AS feature is not supported
+currently. When you follow the steps of LSDK19.09 user manual to set SFI maxSDU be
+200 on switch port, and ping with a size of 300 packet, it also pass through, while
+the expected result is the packet should not pass. This will be fixed later.
