@@ -3,5 +3,5 @@
 #
 
 COMPATIBLE_MACHINE_nxp-ls1028 = "nxp-ls1028"
-TARGET_SUPPORTED_KTYPES_nxp-ls1028 = "standard"
+TARGET_SUPPORTED_KTYPES_nxp-ls1028 = "standard preempt-rt"
 
