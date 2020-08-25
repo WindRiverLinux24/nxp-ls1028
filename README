@@ -422,7 +422,7 @@ For TSN on ENETC, the following protocols have been tested:
 For TSN on switch, the following protocols have been tested:
     1. IEEE 802.1Qbv
     2. IEEE 802.1AS
-
+    3. IEEE 802.1Qci (not include SFI maxSDU)
 
 To get more details about TSN feature, please refer to instructions
 mentioned in the sections
