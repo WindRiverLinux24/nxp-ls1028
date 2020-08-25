@@ -208,17 +208,17 @@ following command:
 Since SAI need rcw_1300_audio.rcw, this section describes how to build a
 firmware including the rcw_1300_audio.rcw.
 
-Firstly, download the LSDK19.09 flexbuilder tool package from the url:
-    https://nxp.flexnetoperations.com/control/frse/download?agree=Accept&element=11352297
+Firstly, download the LSDK flexbuilder tool package from the url:
+    https://nxp.flexnetoperations.com/control/frse/certdlog?item_key=11696317
 
-Choose the flexbuild_lsdk1909_update_311219.tgz to download.
+Choose the flexbuild_lsdkxxxx.tgz(xxxx means version of lsdk) to download.
 After this, build a full firmware for LS1028ardb by command: 
     flex-builder -a arm64 -m ls1028ardb
 when build done, set
     EC1_SAI4_5_PMUX=2
 
 in the following file:
-    flexbuild_lsdk1909_update_311219/packages/firmware/rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.rcw
+    flexbuild_lsdkxxxx/packages/firmware/rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.rcw
 
 and set rcw_xspi=build/firmware/rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
 in configs/board/ls1028ardb/manifest.
@@ -227,7 +227,7 @@ Secondly, clean the last build outcomes of flexbuilder. Then flex-builder
 a new full firmware which will include the rcw_1300_audio.rcw. the outcome
 firmware should be firmware_ls1028ardb_uboot_xspiboot.img in build/images.
 For further use of flex-builder, please refer to 
-    flexbuild_lsdk1909_update_311219/docs.
+    flexbuild_lsdkxxxx/docs.
 
 Thirdly, write the firmware_ls1028ardb_uboot_xspiboot.img into xspi flash
 on the board at address 0x00 like the following:
@@ -431,7 +431,7 @@ mentioned in the sections
 
 in the NXP's SDK user manual
 
-    "Layerscape Software Development Kit 19.09 Documentation.pdf (REV 19.09_311219)".
+    "Layerscape Software Development Kit User Guide.pdf (LSDK 20.04)".
 
 6.8 PCIe
 ---------
