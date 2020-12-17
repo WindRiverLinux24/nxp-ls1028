@@ -203,7 +203,18 @@ following command:
 
 	# aplay /usr/share/sounds/alsa/Front_Center.wav
 
-6.1.1 Steps to build RCW
+6.1.1 Install Audio tools
+
+The audio tools has been moved to BSP_EXTRAS_PACKAGES.
+Simply add line as follows to ${buildprj}/build/conf/local.conf:
+
+ WRTEMPLATE ?= "feature/bsp-extras"
+
+You also install alsa-utils separately with the following line:
+
+IMAGE_INSTALL_append += " alsa-utils"
+
+6.1.2 Steps to build RCW
 ------------------------
 Since SAI need rcw_1300_audio.rcw, this section describes how to build a
 firmware including the rcw_1300_audio.rcw.
