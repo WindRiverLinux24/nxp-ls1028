@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 Wind River Systems, Inc.
+# Copyright (C) 2021 Wind River Systems, Inc.
 #
 
 COMPATIBLE_MACHINE_nxp-ls1028 = "nxp-ls1028"
