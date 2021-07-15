@@ -24,7 +24,7 @@ is done automatically when using the Wind River configure wrapper.
 
 License
 -------
-Copyright (C) 2019-2020 Wind River Systems, Inc.
+Copyright (C) 2021 Wind River Systems, Inc.
 
 Source code included in the tree for individual recipes is under the LICENSE
 stated in the associated recipe (.bb file) unless otherwise stated.
@@ -308,19 +308,23 @@ Note:
     ptp4l[252.816]: master offset      22082 s2 freq  +14273 path delay     19848
     ptp4l[253.816]: master offset     -18512 s2 freq  -19696 path delay     21217
 
-6.4 PCIe SR-IOV 
+6.4 PCIe SR-IOV
 --------------
 
   # ifconfig -a|grep eth|wc -l
-    7
+    2
 
-  # cd /sys/bus/pci/devices/0000:00:00.0
+  # ifconfig -a|grep swp|wc -l
+    4
+
+# cd /sys/bus/pci/devices/0000:00:00.0
   # echo 1 > sriov_numvfs
-    iommu: Adding device 0000:00:01.0 to group 9
+    pci 0000:00:01.0: [1957:ef00] type 00 class 0x020001
+    fsl_enetc_vf 0000:00:01.0: Adding to iommu group 9
     fsl_enetc_vf 0000:00:01.0: enabling device (0000 -> 0002)
-    fsl_enetc_vf 0000:00:01.0 eth7: ENETC VF driver v0.9
+
   # ifconfig -a|grep eth|wc -l
-    8
+    3
   # ethtool -i eth0
     driver: fsl_enetc
     version:
@@ -333,7 +337,7 @@ Note:
     supports-register-dump: yes
     supports-priv-flags: no
 
-  # ethtool -i eth7
+  # ethtool -i eth2
     driver: fsl_enetc_vf
     version:
     firmware-version:
@@ -349,16 +353,56 @@ Note:
 6.5 ina220 & sa56004
 --------------------
 
-  # ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-004c/hwmon/hwmon1
+  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-3/3-0040/hwmon/hwmon1/name
+   ina220
+  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-3/3-0040/hwmon/hwmon1
+   total 0
+   consumers
+   curr1_input
+   device -> ../../../3-0040
+   in0_input
+   in1_input
+   name
+   of_node -> ../../../../../../../../../firmware/devicetree/base/soc/i2c@2000000/i2c-mux@77/i2c@2/current-monitor@40
+   power
+   power1_input
+   shunt_resistor
+   subsystem -> ../../../../../../../../../class/hwmon
+   suppliers
+   uevent
 
-  # ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-3/3-0040/hwmon/hwmon
-    curr1_input
-    in0_input
-    in1_input
-    name
-    power
-    power1_input
-    shunt_resistor
+  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-004c/hwmon/hwmon2/name
+   sa56004
+  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-004c/hwmon/hwmon2
+   total 0
+   alarms
+   consumers
+   device -> ../../../4-004c
+   name
+   of_node -> ../../../../../../../../../firmware/devicetree/base/soc/i2c@2000000/i2c-mux@77/i2c@3/temperature-sensor@4c
+   power
+   subsystem -> ../../../../../../../../../class/hwmon
+   suppliers
+   temp1_crit
+   temp1_crit_alarm
+   temp1_crit_hyst
+   temp1_input
+   temp1_max
+   temp1_max_alarm
+   temp1_min
+   temp1_min_alarm
+   temp2_crit
+   temp2_crit_alarm
+   temp2_crit_hyst
+   temp2_fault
+   temp2_input
+   temp2_max
+   temp2_max_alarm
+   temp2_min
+   temp2_min_alarm
+   temp2_offset
+   uevent
+   update_interval
 
 6.6 switch
 ----------
@@ -367,32 +411,30 @@ On the LS1028A SoC, there is a L2Switch which is connected to the host CPU
 via one SoC internal MAC-to-MAC port connection between the switch and
 corresponding ENETC Ethernet endpoints:
 
-• ENETC Port 2(eth1) and switch port #4(eth6)
+• ENETC Port 2(eth0) and switch port #4(swp3)
 
 Following the below steps can bring up the switch ports and test ping between
 two boards:
 
 On Board1:
-  ifconfig eth1 up
+  ifconfig eth0 up
   ip link add name switch type bridge
   ip link set switch up
-  ip link set eth2 master switch && ip link set eth2 up
-  ip link set eth3 master switch && ip link set eth3 up
-  ip link set eth4 master switch && ip link set eth4 up
-  ip link set eth5 master switch && ip link set eth5 up
-  ip link set eth6 master switch && ip link set eth6 up
+  ip link set swp0 master switch && ip link set swp0 up
+  ip link set swp1 master switch && ip link set swp1 up
+  ip link set swp2 master switch && ip link set swp2 up
+  ip link set swp3 master switch && ip link set swp3 up
   ifconfig switch 192.168.1.2/24
 
 
 On Board2:
-  ifconfig eth1 up
+  ifconfig eth0 up
   ip link add name switch type bridge
   ip link set switch up
-  ip link set eth2 master switch && ip link set eth2 up
-  ip link set eth3 master switch && ip link set eth3 up
-  ip link set eth4 master switch && ip link set eth4 up
-  ip link set eth5 master switch && ip link set eth5 up
-  ip link set eth6 master switch && ip link set eth6 up
+  ip link set swp0 master switch && ip link set swp0 up
+  ip link set swp1 master switch && ip link set swp1 up
+  ip link set swp2 master switch && ip link set swp2 up
+  ip link set swp3 master switch && ip link set swp3 up
   ifconfig switch 192.168.1.3/24
 
 From Board1 ping Board2:
@@ -426,7 +468,7 @@ For TSN on ENETC, the following protocols have been tested:
 For TSN on switch, the following protocols have been tested:
     1. IEEE 802.1Qbv
     2. IEEE 802.1AS
-    3. IEEE 802.1Qci (not include SFI maxSDU)
+    3. IEEE 802.1Qci
 
 To get more details about TSN feature, please refer to instructions
 mentioned in the sections
@@ -435,7 +477,7 @@ mentioned in the sections
 
 in the NXP's SDK user manual
 
-    "Layerscape Software Development Kit User Guide.pdf (LSDK 20.04)".
+    "Layerscape Software Development Kit User Guide.pdf (LSDK 20.12)".
 
 6.8 PCIe
 ---------
