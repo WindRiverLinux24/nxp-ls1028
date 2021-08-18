@@ -52,13 +52,6 @@ the corresponding h/w features exist.
 	+ SDHC (eMMC)
 	+ USB (3.0)
 
-  o User_Interface_Multimedia
-	+ Audio SAI
-
-  o Graphic
-	+ DRM
-	+ Galcore (GPU device)
-
   o Misc Devices
 	+ RTC: pcf2127
 	+ SEC Engine: CAAM crypto driver
@@ -71,9 +64,11 @@ the corresponding h/w features exist.
 Same as SDK, the following features are not supported and validated:
   x M.2 Key B slot for SATA based SSD cards (Disabled by default from hardware)
   x QSPI emulator (TFM-110-02-S-D-SN-K-TR) 
-  x Watchdog (Known issue)
-    https://community.nxp.com/message/1134998?commentID=1134998&et=watches.email.thread
+  x Audio SAI
   x DP (DisplayPort)
+  x DRM
+  x Galcore (GPU device)
+  x Kexec and Kdump
   x Freescale QDMA engine
 
 4. BSP Notes
