@@ -64,7 +64,7 @@ The following table summarizes the valid Wind River Linux distros for this BSP.
 For the supported kernel type for this BSP, please check the TARGET_SUPPORTED_KTYPES
 by running 'bitbake -e virtual/kernel | grep "^TARGET_SUPPORTED_KTYPES="'.
 
-Note: The preempt-rt ktype is available for this BSP/Machine at this time.
+Note: The preempt-rt ktype is not available for this BSP/Machine at this time.
 
 
 3. Board Specific Patches
@@ -411,13 +411,13 @@ On the LS1028A SoC, there is a L2Switch which is connected to the host CPU
 via one SoC internal MAC-to-MAC port connection between the switch and
 corresponding ENETC Ethernet endpoints:
 
-• ENETC Port 2(eth0) and switch port #4(swp3)
+• ENETC Port 2(eth1) and switch port #4(swp3)
 
 Following the below steps can bring up the switch ports and test ping between
 two boards:
 
 On Board1:
-  ifconfig eth0 up
+  ifconfig eth1 up
   ip link add name switch type bridge
   ip link set switch up
   ip link set swp0 master switch && ip link set swp0 up
@@ -428,7 +428,7 @@ On Board1:
 
 
 On Board2:
-  ifconfig eth0 up
+  ifconfig eth1 up
   ip link add name switch type bridge
   ip link set switch up
   ip link set swp0 master switch && ip link set swp0 up
