@@ -91,17 +91,7 @@ in a different environment it may possibly have some issues.
 Here is the board link:
   https://www.nxp.com/support/developer-resources/software-development-tools/qoriq-developer-resources/ls1028a-reference-design-board:LS1028ARDB
 
-4.2 USB 3.0 ref clk errors from dmesg
--------------------------------------
-
-From May 2018, dwc3 did a mainline commit(fe8abf33) to support clocks and resets
-for DWC3 core, and it seems ls1028a didn't follow it. Given this, when the board boot,
-the following error will show:
-	dwc3 3100000.usb: Failed to get clk 'ref': -2
-	dwc3 3110000.usb: Failed to get clk 'ref': -2
-There is no obvious harm to USB usage so far, and this will be fixed later.
-
-4.3 M.2 Sata interface disabled by default
+4.2 M.2 Sata interface disabled by default
 ------------------------------------------
 
 According to the section 2.10 M.2 connectors in QorIQ LS1028A Reference Design
@@ -111,11 +101,32 @@ can not be enabled at the same time, and the M.2 J18 connector is the default
 one from hardware level. So this is why SATA is not validated. Please refer to
 the vendor for more information.
 
-4.4 TSN 802.1AS on ENETC not supported
+4.3 TSN 802.1AS on ENETC not supported
 --------------------------------------
 
 According to the LSDK lf-5.10.y, the 802.1AS feature is not supported
 currently. When you boot two LS1028ardb boards to test it by the following command:
     ptp4l -i eth0 -p /dev/ptp0 -f gPTP.cfg -m
 Both sides will show the info of "assuming the grand master role". But this issue does
-not infect the other TSN features on ENETC. And this will be fixed later.
+not affect the other TSN features on ENETC.
+
+4.4 TSN FMI test on ENETC not supported
+--------------------------------------
+
+According to the LSDK lf-5.10.y, the FMI feature is not supported
+currently. When you boot two LS1028ardb boards to test it by the following command:
+
+    tsntool qcifmiset --device eth0 --index 2 --cm --cf --cbs 1500 --cir 5000000 --ebs 1500 --eir 2000000
+We can find ""cir":  705032703, "cbs":  1500, "eir":  1999999997," cir and eir are very big value.
+But this issue does not affect the other TSN features on ENETC.
+
+4.5 TSN Source Stream Identify Entry test on ENETC not supported
+--------------------------------------
+
+According to the LSDK lf-5.10.y, Source Stream Identify Entry test is not supported
+currently. When you boot two LS1028ardb boards to test it by the following command:
+
+    tsntool> cbstreamidset --device eth0 --index 3 --sourcemacvid --sourcemac 0x112233445566 --
+    sourcetagged 3 --sourcevid 20 --streamhandle 100
+    tsntool> qcisfiget --device eno0 --index 1
+The frame do not pass. But this issue does not affect the other TSN features on ENETC.

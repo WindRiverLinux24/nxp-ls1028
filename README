@@ -462,7 +462,7 @@ feature on both ENETC and switch.
 
 For TSN on ENETC, the following protocols have been tested:
     1. IEEE 802.1Qbv
-    2. IEEE 802.1Qci
+    2. IEEE 802.1Qci(not include Source Stream Identify Entry test and FMI test)
     3. IEEE 802.1Qav
 
 For TSN on switch, the following protocols have been tested:
