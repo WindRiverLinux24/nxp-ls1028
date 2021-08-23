@@ -128,5 +128,5 @@ currently. When you boot two LS1028ardb boards to test it by the following comma
 
     tsntool> cbstreamidset --device eth0 --index 3 --sourcemacvid --sourcemac 0x112233445566 --
     sourcetagged 3 --sourcevid 20 --streamhandle 100
-    tsntool> qcisfiget --device eno0 --index 1
+    tsntool> qcisfiget --device eth0 --index 1
 The frame do not pass. But this issue does not affect the other TSN features on ENETC.
