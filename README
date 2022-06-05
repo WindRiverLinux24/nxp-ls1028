@@ -24,7 +24,7 @@ is done automatically when using the Wind River configure wrapper.
 
 License
 -------
-Copyright (C) 2021 Wind River Systems, Inc.
+Copyright (C) 2022 Wind River Systems, Inc.
 
 Source code included in the tree for individual recipes is under the LICENSE
 stated in the associated recipe (.bb file) unless otherwise stated.
@@ -63,8 +63,6 @@ The following table summarizes the valid Wind River Linux distros for this BSP.
 
 For the supported kernel type for this BSP, please check the TARGET_SUPPORTED_KTYPES
 by running 'bitbake -e virtual/kernel | grep "^TARGET_SUPPORTED_KTYPES="'.
-
-Note: The preempt-rt ktype is not available for this BSP/Machine at this time.
 
 
 3. Board Specific Patches
@@ -158,7 +156,7 @@ partitioned image on a SD card. The wic command
 generates partitioned images from existing OpenEmbedded build artifacts.
 User can refer to the below URL to get more WIC details:
 
-http://www.yoctoproject.org/docs/2.6/mega-manual/mega-manual.html#creating-partitioned-images-using-wic
+https://docs.yoctoproject.org/dev-manual/common-tasks.html#creating-partitioned-images-using-wic
 
 This BSP supports disk images for SD card.
 After build the project, user will get a WIC image under the directory
@@ -216,7 +214,7 @@ Simply add line as follows to ${buildprj}/build/conf/local.conf:
 
 You also install alsa-utils separately with the following line:
 
-IMAGE_INSTALL_append += " alsa-utils"
+IMAGE_INSTALL:append = " alsa-utils"
 
 6.1.2 Steps to build RCW
 ------------------------
@@ -224,7 +222,7 @@ Since SAI need rcw_1300_audio.rcw, this section describes how to build a
 firmware including the rcw_1300_audio.rcw.
 
 Firstly, download the LSDK flexbuilder tool package from the url:
-    https://nxp.flexnetoperations.com/control/frse/certdlog?item_key=11696317
+    https://www.nxp.com/design/software/embedded-software/linux-software-and-development-tools/layerscape-software-development-kit-v21-08:LAYERSCAPE-SDK
 
 Choose the flexbuild_lsdkxxxx.tgz(xxxx means version of lsdk) to download.
 After this, build a full firmware for LS1028ardb by command: 
@@ -481,7 +479,7 @@ mentioned in the sections
 
 in the NXP's SDK user manual
 
-    "Layerscape Software Development Kit User Guide.pdf (LSDK 20.12)".
+    "Layerscape Software Development Kit User Guide.pdf (LSDK 21.08)".
 
 6.8 PCIe
 ---------
@@ -514,7 +512,7 @@ Execute the following commands to validate the WiFi cards:
         # ifconfig wlan<idx> up
         # iw wlan<idx> scan
         # iw dev wlan<idx> connect <AP essid>
-        # dhclient wlan<idx>
+        # dhcpcd wlan<idx>
         # ping <AP address> -i wlan<idx> -c 5
 
 6.9 FlexTimer(FTM)
@@ -557,3 +555,8 @@ on LS1028ardb. Please following the steps below to test it:
     PM: suspend exit
     ata1: SATA link down (SStatus 0 SControl 300)
     fsl_enetc 0000:00:00.0 eth0: Link is Up - 100Mbps/Full - flow control off
+
+6.10 DPDK
+---------
+
+Refer to the README file in dpdk feature directory(layers/wrlinux/templates/feature/dpdk).

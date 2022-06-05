@@ -15,14 +15,14 @@ Table of Contents
 
 This BSP supports the following boards:
 
-  + NXP LS1028A-RDB: CortexA72, SCH RevA1
+  + NXP LS1028A-RDB: CortexA72, SCH-39071 RevA1
 
 
 2. Change History
 =================
 
-  - 2021/07 (LINUXPG-14177): Wind River Linux 10.21 RCPL04, based on LSDK lf-5.10.y.
-
+  - 2022/11 (LINUXPG-1166): Wind River Linux 10.22 RCPL02. Standard and preempt-rt
+		       based on NXP LSDK2108.
 
 3. BSP Features
 ===============
@@ -38,7 +38,7 @@ the corresponding h/w features exist.
 	+ IOMMU
 
   o Bus
-        + CAN: FlexCAN
+	+ CAN: FlexCAN
 	+ I2C: NXP On-Chip I2C controller
 	+ PCI-Express
 
@@ -52,6 +52,10 @@ the corresponding h/w features exist.
 	+ SDHC (eMMC)
 	+ USB (3.0)
 
+  o User_Interface_Multimedia
+	+ Audio SAI
+	+ DP (DisplayPort)
+
   o Misc Devices
 	+ RTC: pcf2127
 	+ SEC Engine: CAAM crypto driver
@@ -64,12 +68,10 @@ the corresponding h/w features exist.
 Same as SDK, the following features are not supported and validated:
   x M.2 Key B slot for SATA based SSD cards (Disabled by default from hardware)
   x QSPI emulator (TFM-110-02-S-D-SN-K-TR) 
-  x Audio SAI
-  x DP (DisplayPort)
-  x DRM
-  x Galcore (GPU device)
-  x Kexec and Kdump
   x Freescale QDMA engine
+  x Graphics
+	x DRM
+	x Galcore (GPU device)
 
 4. BSP Notes
 ============
@@ -86,7 +88,7 @@ in a different environment it may possibly have some issues.
 	Processor:		LS1028AE Rev1.0 (0x870b0010)
 	Board:			LS1028AE Rev1.0-RDB, Version: A
 	BootLoader:		U-Boot
-	BootLoader Version:	U-Boot 2020.04-gf46a944f71
+	BootLoader Version:	U-Boot 2021.04+fsl+gf7b43f8b4c (Mar 01 2022 - 07:31:56 +0000)
 
 Here is the board link:
   https://www.nxp.com/support/developer-resources/software-development-tools/qoriq-developer-resources/ls1028a-reference-design-board:LS1028ARDB
@@ -104,16 +106,16 @@ the vendor for more information.
 4.3 TSN 802.1AS on ENETC not supported
 --------------------------------------
 
-According to the LSDK lf-5.10.y, the 802.1AS feature is not supported
+According to the LSDK 21.08, the 802.1AS feature is not supported
 currently. When you boot two LS1028ardb boards to test it by the following command:
     ptp4l -i eth0 -p /dev/ptp0 -f gPTP.cfg -m
 Both sides will show the info of "assuming the grand master role". But this issue does
 not affect the other TSN features on ENETC.
 
 4.4 TSN FMI test on ENETC not supported
---------------------------------------
+---------------------------------------
 
-According to the LSDK lf-5.10.y, the FMI feature is not supported
+According to the LSDK 21.08, the FMI feature is not supported
 currently. When you boot two LS1028ardb boards to test it by the following command:
 
     tsntool qcifmiset --device eth0 --index 2 --cm --cf --cbs 1500 --cir 5000000 --ebs 1500 --eir 2000000
@@ -121,9 +123,9 @@ We can find ""cir":  705032703, "cbs":  1500, "eir":  1999999997," cir and eir a
 But this issue does not affect the other TSN features on ENETC.
 
 4.5 TSN Source Stream Identify Entry test on ENETC not supported
---------------------------------------
+----------------------------------------------------------------
 
-According to the LSDK lf-5.10.y, Source Stream Identify Entry test is not supported
+According to the LSDK 21.08, Source Stream Identify Entry test is not supported
 currently. When you boot two LS1028ardb boards to test it by the following command:
 
     tsntool> cbstreamidset --device eth0 --index 3 --sourcemacvid --sourcemac 0x112233445566 --
