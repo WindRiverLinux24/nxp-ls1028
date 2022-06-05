@@ -1,0 +1,2 @@
+COMPATIBLE_MACHINE:nxp-ls1028 = "nxp-ls1028"
+DPDK_EXAMPLES:nxp-ls1028 = "all"
