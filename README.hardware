@@ -73,6 +73,10 @@ Same as SDK, the following features are not supported and validated:
 	x DRM
 	x Galcore (GPU device)
 
+Note:
+Although Graphics feature is not supported by default, refer to section 6.11 in README, customer can
+build image with Graphics feature manually by themselves.
+
 4. BSP Notes
 ============
 

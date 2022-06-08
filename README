@@ -560,3 +560,179 @@ on LS1028ardb. Please following the steps below to test it:
 ---------
 
 Refer to the README file in dpdk feature directory(layers/wrlinux/templates/feature/dpdk).
+
+6.11 Graphics
+-------------
+
+6.11.1 Enable Display Transmitter Controller
+--------------------------------------------
+
+6.11.1.1 Introduction
+---------------------
+
+The Display Transmitter Controller offers multiprotocol support of standards such as DisplayPort v1.3 and eDP v1.4.
+
+6.11.1.1 Display Driver
+-----------------------
+
+The Display Transmitter Controller driver has been built when setup project with DISTRO_FEATURES including "x11 wayland".
+
+6.11.1.2 RCW Configuration
+--------------------------
+
+To enable Display Transmitter Controller, the rcw binary needs to be modified, set HWA_CGA_M3_CLK_SEL to 2.
+And then build the ls1028 bootloader file(firmware_ls1028ardb_uboot_<boot-type>.img). Detailed steps as below:
+
+<1>. Download the LSDK flexbuilder tool package from the url:
+	 https://www.nxp.com/design/software/embedded-software/linux-software-and-development-tools/layerscape-software-development-kit-v21-08:LAYERSCAPE-SDK
+
+<2>. Build ls1028 bootloader with below steps
+	# tar zxvf flexbuild_lsdk2108.tgz
+	# cd flexbuild_lsdk2108
+	# source setup.env
+	# flex-builder -i mkfw -m ls1028ardb
+
+<3>. Modify rcw file
+	Set HWA_CGA_M3_CLK_SEL to 2 in flexbuild_lsdk2108/components/firmware/rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.rcw
+	And then set below contents in configs/board/ls1028ardb/manifest.
+		rcw_xspi="firmware/rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin"
+		rcw_sd="firmware/rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin"
+		rcw_emmc="firmware/rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin"
+
+<4>. Clean and rebuild ls1028 bootloader with below steps
+	# flex-builder clean-firmware
+	# flex-builder -i mkfw -m ls1028ardb
+	The outcome bootloader should be build/images directory.
+
+<5>. Burn bootloader
+	Refer to Layerscape Software Development Kit User Guide, 4.1.8 LSDK Quick Start Guide for LS1028ARDB
+
+6.11.1.3 Load DP Firmware
+-------------------------
+
+In u-boot command terminal, run below command before loading linux kernel image.
+
+	# run xspi_hdploadcmd
+
+6.11.2 Enable GPU
+-----------------
+
+6.11.2.1 Introduction
+---------------------
+
+The graphics processing unit (GPU) provides high performance, high quality graphics, low power consumption, and the smallest
+silicon footprint for its class. The dynamic power consumption is minimized by extensive use of multi-level hierarchical clock
+gating.
+
+6.11.2.2 GPU Driver
+-------------------
+
+The GPU driver has been built when setup project with DISTRO_FEATURES including "x11 wayland".
+
+6.11.2.3 Limitation
+-------------------
+
+GPU driver does not support SMMU feature. When SMMU is enabled, GPU will not work.
+To disable SMMU, add the following to bootargs:
+iommu.passthrough=1 arm-smmu.disable_bypass=0
+
+6.11.2.4 Verify GPU Accelerator
+-------------------------------
+
+When the system with graphics boots up, run below command to verify whether GPU works fine.
+
+	# es2gears_wayland
+	GL_VERSION = 1.5
+	vertex shader info:
+	fragment shader info:
+	info:
+	600 frames in 5.0 seconds = 119.713 FPS
+	598 frames in 5.0 seconds = 119.600 FPS
+	598 frames in 5.0 seconds = 119.600 FPS
+	596 frames in 5.0 seconds = 119.200 FPS
+	596 frames in 5.0 seconds = 119.200 FPS
+
+There are 3 gears rotating rapidly on DP monitor。
+
+6.11.3 Build Project with Graphics Feature
+------------------------------------------
+
+Because of the license limitation, WRLinux LTS product doesn't build graphics related packages by default.
+Customer needs to build graphics features manually with below steps.
+
+	# xxx/wrlinux-x/setup.sh --machine nxp-ls1028 --kernel standard --distro wrlinux-graphics --dl-layers --all-layers --accept-eula=yes
+	# . environment-setup-x86_64-wrlinuxsdk-linux
+	# . oe-init-build-env
+
+	Add below content in <Project-Path>/build/conf/local.conf
+
+	BB_NO_NETWORK = '0'
+	ACCEPT_FSL_EULA = "1"
+	MACHINEOVERRIDES:prepend:nxp-ls1028 = "imxgpu:use-nxp-bsp:"
+
+	IMAGE_FEATURES:append = " weston"
+	IMAGE_FEATURES:remove = "x11-base x11-sato"
+
+	IMAGE_INSTALL:append = " \
+	    packagegroup-fsl-tools-gpu \
+	    packagegroup-imx-tools-audio \
+		weston-xwayland weston-init weston-examples \
+		gtk+3-demo xterm \
+	    packagegroup-fsl-gstreamer1.0-full \
+	    libopencl-imx \
+	    imx-gpu-viv-demos \
+	    mesa-demos \
+	"
+
+	PREFERRED_PROVIDER_virtual/libgl  = "imx-gpu-viv"
+	PREFERRED_PROVIDER_virtual/libgles1 = "imx-gpu-viv"
+	PREFERRED_PROVIDER_virtual/libgles2 = "imx-gpu-viv"
+	PREFERRED_PROVIDER_virtual/egl      = "imx-gpu-viv"
+	PREFERRED_VERSION_fmt  = "8.0.1"
+	PREFERRED_VERSION_mesa = "21.2.4"
+	PREFERRED_VERSION_weston = "9.0.0.imx"
+	PREFERRED_VERSION_wayland-protocols = "1.25.imx"
+	PREFERRED_VERSION_libdrm = "2.4.109.imx"
+
+	WRL_RECIPES:fsl-bsp-release += 'imx-gpu-viv'
+	WRL_RECIPES:fsl-bsp-release += 'imx-gpu-viv-demos'
+	WRL_RECIPES:fsl-bsp-release += 'mesa'
+	WRL_RECIPES:fsl-bsp-release += 'systemd-gpuconfig'
+	WRL_RECIPES:fsl-bsp-release += 'fmt'
+
+	WRL_RECIPES:fsl-sdk-release += 'imx-gpu-sdk'
+
+	WRL_RECIPES:freescale-layer += 'libdrm'
+	WRL_RECIPES:freescale-layer += 'weston'
+	WRL_RECIPES:freescale-layer += 'wayland-protocols'
+
+	WRL_RECIPES:freescale-distro += 'packagegroup-fsl-tools-gpu'
+	WRL_RECIPES:freescale-distro += 'packagegroup-fsl-gstreamer1.0-full'
+	WRL_RECIPES:freescale-distro += 'packagegroup-fsl-gstreamer1.0'
+	WRL_RECIPES:freescale-distro += 'packagegroup-imx-tools-audio'
+	WRL_RECIPES:freescale-distro += 'packagegroup-fsl-gstreamer1.0-commercial'
+	WRL_RECIPES:freescale-distro += 'half'
+	WRL_RECIPES:freescale-distro += 'stb'
+	WRL_RECIPES:freescale-distro += 'assimp'
+	WRL_RECIPES:freescale-distro += 'devil'
+	WRL_RECIPES:freescale-distro += 'gli'
+
+	WRL_RECIPES:openembedded-layer += 'xterm'
+	WRL_RECIPES:openembedded-layer += 'libxaw'
+	WRL_RECIPES:openembedded-layer += 'googletest'
+	WRL_RECIPES:openembedded-layer += 'rapidjson'
+	WRL_RECIPES:openembedded-layer += 'nlohmann-json'
+	WRL_RECIPES:openembedded-layer += 'glm'
+	WRL_RECIPES:openembedded-layer += 'freeglut'
+
+	# Some gstream plugins require "commercial" be set in LICENSE_FLAGS_WHITELIST
+	# For example, gstreamer1.0-plugins-ugly-asf/gstreamer1.0-libav
+	LICENSE_FLAGS_ACCEPTED:append = " commercial"
+
+	MACHINE_HAS_VIVANTE_KERNEL_DRIVER_SUPPORT = "1"
+
+	At late, build the wrlinux image
+	# bitbake wrlinux-image-std-sato
+
+Note: Customer needs to confirm the IP license of GPU related packages before integrating them in their own product.
+	  WindRiver only offers some demos to verify GPU and Display drivers.
