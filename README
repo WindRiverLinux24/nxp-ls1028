@@ -169,16 +169,33 @@ Then user can write the output image to a SD card:
 5.1 Burn images to SD card
 --------------------------
 
-To burn WIC image to SD card, user only need to execute the below command:
+1) Burn WIC image
 
 # dd if=wrlinux-image-std-nxp-ls1028.wic of=/dev/your_sd_dev
 
-5.2 Set uboot env
+2) Burn NXP pre-built SD image
+
+NXP provides a pre-built SD image which contains U-Boot, RCW, firmware, etc.
+Please download it through:
+"wget https://www.nxp.com/lgfiles/sdk/lsdk2108/firmware_ls1028ardb_sdboot.img"
+
+# dd if=firmware_ls1028ardb_sdboot.img of=/dev/your_sd_dev bs=512 seek=8 conv=fsync
+
+5.2 Set board switch
+--------------------
+
+Board can boot from SD card by setting SW2~SW5 as below.
+After power up, if a bootable SD card inserted, then system will boot from SD card.
+
+Boot source 		SW2[1:8] 		SW3[1:8] 		SW5[1:8]
+SD Card (SDHC1) 	1000_1000 		1111_0000 		0011_1001
+
+5.3 Set uboot env
 -----------------
 
 Board can boot automatically by set the below uboot environment variables:
 
-=> setenv bootfile Image; setenv fdtfile fsl-ls1028a-rdb.dtb; setenv loadaddr 0x80080000; setenv fdtaddr a0000000;
+=> setenv bootfile Image; setenv fdtfile fsl-ls1028a-rdb.dtb; setenv loadaddr 0x81000000; setenv fdtaddr 0x90000000;
 
 => setenv bootargs console=ttyS0,115200n8 root=/dev/mmcblk0p2 rw
 
