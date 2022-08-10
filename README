@@ -705,17 +705,13 @@ Customer needs to build graphics features manually with below steps.
 	PREFERRED_PROVIDER_virtual/libgles1 = "imx-gpu-viv"
 	PREFERRED_PROVIDER_virtual/libgles2 = "imx-gpu-viv"
 	PREFERRED_PROVIDER_virtual/egl      = "imx-gpu-viv"
-	PREFERRED_VERSION_fmt  = "8.0.1"
-	PREFERRED_VERSION_mesa = "21.2.4"
 	PREFERRED_VERSION_weston = "9.0.0.imx"
 	PREFERRED_VERSION_wayland-protocols = "1.25.imx"
 	PREFERRED_VERSION_libdrm = "2.4.109.imx"
 
 	WRL_RECIPES:fsl-bsp-release += 'imx-gpu-viv'
 	WRL_RECIPES:fsl-bsp-release += 'imx-gpu-viv-demos'
-	WRL_RECIPES:fsl-bsp-release += 'mesa'
 	WRL_RECIPES:fsl-bsp-release += 'systemd-gpuconfig'
-	WRL_RECIPES:fsl-bsp-release += 'fmt'
 
 	WRL_RECIPES:fsl-sdk-release += 'imx-gpu-sdk'
 
