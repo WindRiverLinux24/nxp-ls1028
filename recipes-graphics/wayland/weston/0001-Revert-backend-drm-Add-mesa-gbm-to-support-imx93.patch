@@ -1,0 +1,59 @@
+From bfb424869e7100036dc345790d655c9d2dbb52ad Mon Sep 17 00:00:00 2001
+From: Meng Li <Meng.Li@windriver.com>
+Date: Mon, 19 Sep 2022 18:00:50 +0800
+Subject: [PATCH] Revert "backend-drm: Add mesa gbm to support imx93"
+
+This reverts commit a354b65157b89659ccbcf566f5fe2ca0b78e34fe.
+
+This patch is not compatible with nxp-ls1028 platform, because
+the libgbm is installed in usr/lib64.
+
+Signed-off-by: Meng Li <Meng.Li@windriver.com>
+---
+ libweston/backend-drm/drm-internal.h | 2 --
+ libweston/backend-drm/drm.c          | 1 -
+ libweston/backend-drm/kms.c          | 3 +--
+ 3 files changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/libweston/backend-drm/drm-internal.h b/libweston/backend-drm/drm-internal.h
+index 9ab3918e..8168a8c1 100644
+--- a/libweston/backend-drm/drm-internal.h
++++ b/libweston/backend-drm/drm-internal.h
+@@ -602,8 +602,6 @@ struct drm_output {
+ 	bool virtual;
+ 
+ 	submit_frame_cb virtual_submit_frame;
+-
+-	int (*surface_get_in_fence_fd)(struct gbm_surface *surface);
+ };
+ 
+ static inline struct drm_head *
+diff --git a/libweston/backend-drm/drm.c b/libweston/backend-drm/drm.c
+index b3ff19cb..f507acc1 100644
+--- a/libweston/backend-drm/drm.c
++++ b/libweston/backend-drm/drm.c
+@@ -2313,7 +2313,6 @@ drm_output_create(struct weston_compositor *compositor, const char *name)
+ 
+ #ifdef BUILD_DRM_GBM
+ 	output->gbm_bo_flags = GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING;
+-	output->surface_get_in_fence_fd = weston_load_module("/usr/lib/libgbm.so", "gbm_surface_get_in_fence_fd");
+ #endif
+ 
+ 	weston_output_init(&output->base, compositor, name);
+diff --git a/libweston/backend-drm/kms.c b/libweston/backend-drm/kms.c
+index 4996fb4b..56f7d712 100644
+--- a/libweston/backend-drm/kms.c
++++ b/libweston/backend-drm/kms.c
+@@ -936,8 +936,7 @@ drm_output_apply_state_atomic(struct drm_output_state *state,
+ 		 * the buffer_release was not exist or
+ 		 * the buffer was not used in the output.
+ 		 */
+-		if (output->surface_get_in_fence_fd)
+-			in_fence_fd = output->surface_get_in_fence_fd(output->gbm_surface);
++		in_fence_fd = gbm_surface_get_in_fence_fd(output->gbm_surface);
+ 	}
+ #if defined(ENABLE_IMXGPU) && defined(ENABLE_IMXG2D)
+ 	else if(b->use_g2d && b->g2d_renderer) {
+-- 
+2.36.1
+
