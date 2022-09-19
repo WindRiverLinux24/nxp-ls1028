@@ -705,7 +705,7 @@ Customer needs to build graphics features manually with below steps.
 	PREFERRED_PROVIDER_virtual/libgles1 = "imx-gpu-viv"
 	PREFERRED_PROVIDER_virtual/libgles2 = "imx-gpu-viv"
 	PREFERRED_PROVIDER_virtual/egl      = "imx-gpu-viv"
-	PREFERRED_VERSION_weston = "9.0.0.imx"
+	PREFERRED_VERSION_weston = "10.0.0.imx"
 	PREFERRED_VERSION_wayland-protocols = "1.25.imx"
 	PREFERRED_VERSION_libdrm = "2.4.109.imx"
 
@@ -737,6 +737,9 @@ Customer needs to build graphics features manually with below steps.
 	WRL_RECIPES:openembedded-layer += 'nlohmann-json'
 	WRL_RECIPES:openembedded-layer += 'glm'
 	WRL_RECIPES:openembedded-layer += 'freeglut'
+	WRL_RECIPES:openembedded-layer += 'ccid'
+	WRL_RECIPES:openembedded-layer += 'freerdp'
+	WRL_RECIPES:openembedded-layer += 'pcsc-lite'
 
 	# Some gstream plugins require "commercial" be set in LICENSE_FLAGS_WHITELIST
 	# For example, gstreamer1.0-plugins-ugly-asf/gstreamer1.0-libav
