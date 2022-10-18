@@ -14,7 +14,7 @@ PROVIDES_OPENGLES3:nxp-ls1028   = "virtual/libgles3"
 
 REQUIRED_DISTRO_FEATURES:nxp-ls1028 = "wayland"
 
-IMX_PACKAGES_GBM:nxp-ls1028 = "libgbm-imx libgbm-imx-dev"
+PACKAGES_GBM:nxp-ls1028 = "libgbm-imx libgbm-imx-dev"
 HAS_GBM:nxp-ls1028 = "true"
 IS_MX8:nxp-ls1028 = "1"
 
