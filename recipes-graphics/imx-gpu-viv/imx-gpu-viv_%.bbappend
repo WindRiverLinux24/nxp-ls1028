@@ -12,8 +12,6 @@ EXTRA_PROVIDES:append:nxp-ls1028 = " \
 PROVIDES_OPENVX:nxp-ls1028   = "virtual/libopenvx"
 PROVIDES_OPENGLES3:nxp-ls1028   = "virtual/libgles3"
 
-REQUIRED_DISTRO_FEATURES:nxp-ls1028 = "wayland"
-
 PACKAGES_GBM:nxp-ls1028 = "libgbm-imx libgbm-imx-dev"
 HAS_GBM:nxp-ls1028 = "true"
 IS_MX8:nxp-ls1028 = "1"
