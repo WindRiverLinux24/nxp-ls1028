@@ -20,20 +20,20 @@ index 9ab3918e..8168a8c1 100644
 --- a/libweston/backend-drm/drm-internal.h
 +++ b/libweston/backend-drm/drm-internal.h
 @@ -602,8 +602,6 @@ struct drm_output {
- 	bool virtual;
+ 	void (*virtual_destroy)(struct weston_output *base);
  
  	submit_frame_cb virtual_submit_frame;
 -
 -	int (*surface_get_in_fence_fd)(struct gbm_surface *surface);
  };
  
- static inline struct drm_head *
+ void
 diff --git a/libweston/backend-drm/drm.c b/libweston/backend-drm/drm.c
 index b3ff19cb..f507acc1 100644
 --- a/libweston/backend-drm/drm.c
 +++ b/libweston/backend-drm/drm.c
 @@ -2313,7 +2313,6 @@ drm_output_create(struct weston_compositor *compositor, const char *name)
- 
+ 	output->gbm_format = DRM_FORMAT_INVALID;
  #ifdef BUILD_DRM_GBM
  	output->gbm_bo_flags = GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING;
 -	output->surface_get_in_fence_fd = weston_load_module("/usr/lib/libgbm.so", "gbm_surface_get_in_fence_fd");
@@ -52,7 +52,7 @@ index 4996fb4b..56f7d712 100644
 -			in_fence_fd = output->surface_get_in_fence_fd(output->gbm_surface);
 +		in_fence_fd = gbm_surface_get_in_fence_fd(output->gbm_surface);
  	}
- #if defined(ENABLE_IMXGPU) && defined(ENABLE_IMXG2D)
+ #if defined(ENABLE_IMXG2D)
  	else if(b->use_g2d && b->g2d_renderer) {
 -- 
 2.36.1

@@ -1,3 +1,5 @@
+COMPATIBLE_MACHINE:nxp-ls1028 = "nxp-ls1028"
+
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI:append:nxp-ls1028 = "\

@@ -1,5 +1,8 @@
-PROVIDES:remove:nxp-ls1028   = "virtual/egl"
+PROVIDES:remove:nxp-ls1028 = "virtual/egl"
 PROVIDES:remove:nxp-ls1028 = "virtual/libgl virtual/libgles1 virtual/libgles2"
+
+PACKAGECONFIG:class-native:nxp-ls1028 ?= "gbm gallium egl opengl elf-tls x11"
+PACKAGECONFIG:class-nativesdk:nxp-ls1028 ?= "gbm gallium egl opengl elf-tls x11"
 
 PACKAGECONFIG:remove:nxp-ls1028   = "egl gbm"
 PACKAGECONFIG:remove:nxp-ls1028 = "gles"
