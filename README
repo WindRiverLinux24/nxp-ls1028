@@ -141,12 +141,13 @@ baudrate=115200
 othbootargs=earlycon=uart8250,mmio,0x21c0500
 
 Note:
-  Currently, it only supports SPI nor flash as the host bootloader.
-  And please set the on-board switch options as following to enable
-  boot from SPI nor flash:
+  Currently, ls1028ardb board supports three boot modes, user can select
+  one of them via setting corresponding DIP switch.
 
-  Boot source 	SW2[1:8] 	SW3[1:8] 	SW5[1:8]
-  FSPI NOR  	1111_1000 	1111_0000 	0011_1001
+  Boot source	   SW2[1:8]	SW3[1:8]	SW5[1:8]
+  FSPI NOR  	   1111_1000	1111_0000	0011_1001
+  SD Card (SDHC1)  1000_1000	1111_0000	0011_1001
+  eMMC		   1001_1000	1111_0000	0011_1001
 
 5. Creating Partitioned Images(WIC)
 ===================================
