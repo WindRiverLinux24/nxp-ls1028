@@ -170,31 +170,16 @@ Then user can write the output image to a SD card:
 5.1 Burn images to SD card
 --------------------------
 
-5.1.1 Burn WIC image
+5.1.1 Generate WIC image with NXP bootloader
+
+WRLinux product provides a solution to build WIC image with NXP bootloader.
+Please refer to section 7 for the detailed description.
+After building, the WIC image(wrlinux-image-std-nxp-ls1028.wic) is generated
+in directory <building-path>/build/tmp-glibc/deploy/images/nxp-ls1028.
+
+5.1.2 Burn WIC image
 
 # dd if=wrlinux-image-std-nxp-ls1028.wic of=/dev/your_sd_dev conv=fsync
-
-5.1.2 Generate Bootloader
-
-Now, NXP recommend customers to use Yocto-based Linux Distribution POC, so it needs
-to build bootloader manually so that latest bootloader is able to be deployed on NXP
-ls1028ardb board.
-
-Detailed building steps as below:
-
-Refer to section 7.1, download Yocto SDK project firstly, and then run below command.
-
-# . ./setup-env -m ls1028ardb -b build_ls1028ardb
-# bitbake secure-boot-qoriq
-
-After building, the bootloader image(firmware_ls1028ardb_uboot_<boot-type>.img) is generated
-in directory sdk-nxp-yocto-langdale/build_ls1028ardb/tmp/deploy/images/ls1028ardb
-
-5.1.3 Burn Bootloader
-
-Burn bootloader image with below command.
-
-# dd if=firmware_ls1028ardb_uboot_sdboot.img of=/dev/your_sd_dev bs=512 seek=8 conv=fsync
 
 5.2 Set board switch
 --------------------
@@ -255,24 +240,25 @@ bootloader including the rcw_1300.rcw.
 
 Detailed steps as below:
 
-Refer to section 7.1, download Yocto SDK project firstly.
+Refer to section 7, add necessary configurations in local.conf firstly.
 
-Open file sources/meta-freescale/ls1028ardb.conf, and then set RCW related
+Open file <project-path>/layers/nxp-ls1028/conf/machine/nxp-ls1028.conf, and then set RCW related
 variable as below.
 RCWSD ?= "R_SQPH_0x85be/rcw_1300"
 RCWXSPI ?= "R_SQPH_0x85be/rcw_1300"
 RCWEMMC ?= "R_SQPH_0x85be/rcw_1300"
 
-Open file sources/meta-qoriq/recipes-bsp/secure-boot/secure-boot-qoriq/ls1028ardb.manifest,
+Open file <project-path>/layers/meta-qoriq/recipes-bsp/secure-boot/secure-boot-qoriq/ls1028ardb.manifest,
 and then set rcw related variable as below.
 rcw_xspi=rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
 rcw_sd=rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
 rcw_emmc=rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
 
-# . ./setup-env -m ls1028ardb -b build_ls1028ardb
+# . environment-setup-x86_64-wrlinuxsdk-linux
+# . oe-init-build-env
 # bitbake rcw
 
-Open file build_ls1028ardb/tmp/work/ls1028ardb-fsl-linux/rcw/git-r0/git/ls1028ardb/R_SQPH_0x85be/rcw_1300.rcw,
+Open file <project-path>/build/tmp-glibc/work/nxp_ls1028-wrs-linux/rcw/git-r0/git/ls1028ardb/R_SQPH_0x85be/rcw_1300.rcw,
 and then set EC1_SAI4_5_PMUX=2.
 
 Rebuild rcw forcely
@@ -282,7 +268,7 @@ Build bootloader image
 # bitbake secure-boot-qoriq
 
 After building, the bootloader image(firmware_ls1028ardb_uboot_<boot-type>.img) of supporting audio
-feature is generated in directory sdk-nxp-yocto-langdale/build_ls1028ardb/tmp/deploy/images/ls1028ardb.
+feature is generated in directory <project-path>/build/tmp-glibc/deploy/images/nxp-ls1028.
 
 6.1.3 Burn Bootloader
 
@@ -625,15 +611,15 @@ And then build the ls1028 bootloader file(firmware_ls1028ardb_uboot_<boot-type>.
 
 Detailed steps as below:
 
-Refer to section 7.1, download Yocto SDK project firstly.
+Refer to section 7, add necessary configurations in local.conf firstly.
 
-Open file sources/meta-freescale/ls1028ardb.conf, and then set RCW related
+Open file <project-path>/layers/nxp-ls1028/conf/machine/nxp-ls1028.conf, and then set RCW related
 variable as below.
 RCWSD ?= "R_SQPH_0x85be/rcw_1300"
 RCWXSPI ?= "R_SQPH_0x85be/rcw_1300"
 RCWEMMC ?= "R_SQPH_0x85be/rcw_1300"
 
-Open file sources/meta-qoriq/recipes-bsp/secure-boot/secure-boot-qoriq/ls1028ardb.manifest,
+Open file <project-path>/layers/meta-qoriq/recipes-bsp/secure-boot/secure-boot-qoriq/ls1028ardb.manifest,
 and then set rcw related variable as below.
 rcw_xspi=rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
 rcw_sd=rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
@@ -642,7 +628,7 @@ rcw_emmc=rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
 # . ./setup-env -m ls1028ardb -b build_ls1028ardb
 # bitbake rcw
 
-Open file build_ls1028ardb/tmp/work/ls1028ardb-fsl-linux/rcw/git-r0/git/ls1028ardb/R_SQPH_0x85be/rcw_1300.rcw,
+Open file <project-path>/build/tmp-glibc/work/nxp_ls1028-wrs-linux/rcw/git-r0/git/ls1028ardb/R_SQPH_0x85be/rcw_1300.rcw,
 and then set HWA_CGA_M3_CLK_SEL=2.
 
 Rebuild rcw forcely
@@ -797,34 +783,7 @@ Note: Customer needs to confirm the IP license of GPU related packages before in
 	  WindRiver only offers some demos to verify GPU and Display drivers.
 
 
-7. Layerscape Yocto SDK
-=======================
-
-7.1 Download layer of Yocto SDK project
----------------------------------------
-
-There are some Yocto layers for Layerscape platform, user can download them with below commands.
-
-	# mkdir ~/bin
-	# curl http://commondatastorage.googleapis.com/git-repo-downloads/repo  > ~/bin/repo
-	# chmod a+x ~/bin/repo
-	# PATH=${PATH}:~/bin
-	# mkdir sdk-nxp-yocto-langdale
-	# cd sdk-nxp-yocto-langdale
-	# ~/bin/repo init -u https://github.com/nxp-qoriq/yocto-sdk -b langdale
-	# ~/bin/repo sync --force-sync
-
-7.2 Build Yocto SDK project
----------------------------
-
-To build Yocto SDK project, please run below command.
-
-	# cd sdk-nxp-yocto-langdale
-	# . ./setup-env -m ls1028ardb -b build_ls1028ardb
-	# bitbake fsl-image-networking-full
-
-
-8. Build Bootloader
+7. Build Bootloader
 ===================
 
 Because of license limitation, the NXP ls1028 bootloader is not supported on WRLinux product.
