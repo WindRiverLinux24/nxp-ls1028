@@ -120,8 +120,9 @@ of 0x80080000 was used with success for all kernels tested by Wind River.
 
 Example settings for the monitor (u-boot) are shown below:
 
-nfsboot=setenv bootargs root=/dev/nfs rw nfsroot=$serverip:$rootpath \
-ip=$ipaddr:$serverip:$gatewayip:$netmask:$hostname:$netdev:off video=video=1920x1080-32@60 \
+nfsboot=setenv bootargs root=/dev/nfs rw nfsroot=$serverip:$rootpath,v3,tcp \
+ip=$ipaddr:$serverip:$gatewayip:$netmask:$hostname:$netdev:off default_hugepagesz=2m \
+hugepagesz=2m hugepages=256 video=1920x1080-32@60 cma=256M \
 console=$consoledev,$baudrate $othbootargs;sf probe && sf read $load_addr 0x900000 0x20000; \
 hdp load $load_addr 0x2000;tftp $kernel_addr_r $kernelfile; \
 tftp $fdt_addr_r $fdtfile;booti $kernel_addr_r - $fdt_addr_r
@@ -220,7 +221,20 @@ work normal. There is an audio output port J34 in the front panel of the
 board, for testing, you can plug in your earphone to hear the sound by the
 following command:
 
-	# aplay /usr/share/sounds/alsa/Front_Center.wav
+	Show all mixer simple controls
+	# amixer -c 0 scontrols
+		   ......
+		   Simple mixer control 'Lineout',0
+		   ......
+
+	Enable audio output
+	# amixer -c 0 sset Lineout on
+
+	Set audio volume
+	# amixer -c 0 sset Lineout 100%
+
+	Play audio
+	# aplay /usr/share/sounds/alsa/Front_Center.wav -Dhw:0,0
 
 6.1.1 Install Audio tools
 
@@ -380,36 +394,32 @@ Note:
 6.5 ina220 & sa56004
 --------------------
 
-  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-3/3-0040/hwmon/hwmon1/name
+  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-0040/hwmon/hwmon2/name
    ina220
-  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-3/3-0040/hwmon/hwmon1
+  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-0040/hwmon/hwmon2/
    total 0
-   consumers
    curr1_input
-   device -> ../../../3-0040
-   in0_input
-   in1_input
+   device -> ../../../4-0040
+   n0_input
+   n1_input
    name
-   of_node -> ../../../../../../../../../firmware/devicetree/base/soc/i2c@2000000/i2c-mux@77/i2c@2/current-monitor@40
+   of_node -> ../../../../../../../../../firmware/devicetree/base/soc/i2c@2000000/i2c-
    power
    power1_input
    shunt_resistor
    subsystem -> ../../../../../../../../../class/hwmon
-   suppliers
    uevent
 
-  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-004c/hwmon/hwmon2/name
+  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-5/5-004c/hwmon/hwmon3/name
    sa56004
-  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-004c/hwmon/hwmon2
+  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-5/5-004c/hwmon/hwmon3
    total 0
    alarms
-   consumers
-   device -> ../../../4-004c
+   device -> ../../../5-004c
    name
    of_node -> ../../../../../../../../../firmware/devicetree/base/soc/i2c@2000000/i2c-mux@77/i2c@3/temperature-sensor@4c
    power
    subsystem -> ../../../../../../../../../class/hwmon
-   suppliers
    temp1_crit
    temp1_crit_alarm
    temp1_crit_hyst
@@ -428,6 +438,7 @@ Note:
    temp2_min
    temp2_min_alarm
    temp2_offset
+   temp_samples
    uevent
    update_interval
 
@@ -521,7 +532,7 @@ Can validate using the following steps:
 
 Simply add line as follows to ${buildprj}/build/conf/local.conf:
 
-        KERNEL_FEATURES_append = " features/iwlwifi/iwlwifi.scc"
+        KERNEL_FEATURES:append = " features/iwlwifi/iwlwifi.scc"
 
 This will include the iwlwifi and mac80211 kernel modules in
 the root file system.
@@ -702,7 +713,7 @@ There are 3 gears rotating rapidly on DP monitor。
 Because of the license limitation, WRLinux LTS product doesn't build graphics related packages by default.
 Customer needs to build graphics features manually with below steps.
 
-	# xxx/wrlinux-x/setup.sh --machine nxp-ls1028 --kernel standard --distro wrlinux-graphics --dl-layers --all-layers --accept-eula=yes
+	# xxx/wrlinux-x/setup.sh --machine nxp-ls1028 --distro wrlinux-graphics --dl-layers --all-layers --accept-eula=yes
 	# . environment-setup-x86_64-wrlinuxsdk-linux
 	# . oe-init-build-env
 
