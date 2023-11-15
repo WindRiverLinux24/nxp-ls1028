@@ -120,7 +120,7 @@ of 0x80080000 was used with success for all kernels tested by Wind River.
 
 Example settings for the monitor (u-boot) are shown below:
 
-nfsboot=setenv bootargs root=/dev/nfs rw nfsroot=$serverip:$rootpath,v3,tcp \
+nfsboot=setenv bootargs root=/dev/nfs rw nfsroot=$serverip:$rootpath \
 ip=$ipaddr:$serverip:$gatewayip:$netmask:$hostname:$netdev:off default_hugepagesz=2m \
 hugepagesz=2m hugepages=256 video=1920x1080-32@60 cma=256M \
 console=$consoledev,$baudrate $othbootargs;sf probe && sf read $load_addr 0x900000 0x20000; \
