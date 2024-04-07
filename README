@@ -636,7 +636,8 @@ rcw_xspi=rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
 rcw_sd=rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
 rcw_emmc=rcw/ls1028ardb/R_SQPH_0x85be/rcw_1300.bin
 
-# . ./setup-env -m ls1028ardb -b build_ls1028ardb
+# . environment-setup-x86_64-wrlinuxsdk-linux
+# . oe-init-build-env
 # bitbake rcw
 
 Open file <project-path>/build/tmp-glibc/work/nxp_ls1028-wrs-linux/rcw/git-r0/git/ls1028ardb/R_SQPH_0x85be/rcw_1300.rcw,
