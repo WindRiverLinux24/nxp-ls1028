@@ -1,1 +1,1 @@
-SRC_URI:remove:nxp-ls1028 = "file://defconfig"
+DEPENDS:append:nxp-ls1028 = " readline"
