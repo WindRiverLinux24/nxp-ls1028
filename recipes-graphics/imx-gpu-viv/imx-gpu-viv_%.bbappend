@@ -2,7 +2,6 @@ DEPENDS:append:nxp-ls1028 = " patchelf-native"
 
 RPROVIDES:${PN}:nxp-ls1028 += "imx-gpu-viv"
 EXTRA_PROVIDES:append:nxp-ls1028 = " \
-    virtual/libgl \
     virtual/libgles1 \
     virtual/libgles2 \
 "
@@ -20,6 +19,7 @@ IS_MX8:nxp-ls1028 = "1"
 FILES:libgbm-imx:nxp-ls1028 = "${libdir}/libgbm${REALSOLIBS} ${libdir}/libgbm${SOLIBSDEV} ${libdir}/libgbm_viv${SOLIBSDEV}"
 FILES:libgbm-imx-dev:nxp-ls1028 = "${libdir}/pkgconfig/gbm.pc ${includedir}/gbm.h"
 RDEPENDS:libgbm-imx:append:nxp-ls1028 = " libdrm"
+RDEPENDS:libegl-imx:append:nxp-ls1028 = " libdrm"
 
 RDEPENDS:libgal-imx:remove:nxp-ls1028 = "kernel-module-imx-gpu-viv"
 COMPATIBLE_MACHINE:nxp-ls1028 = "nxp-ls1028"
