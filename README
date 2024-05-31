@@ -24,7 +24,7 @@ is done automatically when using the Wind River configure wrapper.
 
 License
 -------
-Copyright (C) 2023 Wind River Systems, Inc.
+Copyright (C) 2024 Wind River Systems, Inc.
 
 Source code included in the tree for individual recipes is under the LICENSE
 stated in the associated recipe (.bb file) unless otherwise stated.
@@ -515,8 +515,7 @@ mentioned in the sections
 
 in the NXP's SDK user manuals.
 
-    "Layerscape Software Development Kit User Guide.pdf (LSDK 21.08)"
-    "Layerscape Linux Distribution POC User Guide (L5.15.71-2.2.0)"
+    "Layerscape Linux Distribution POC User Guide Rev, L6.1.55_2.2.0"
 
 6.8 PCIe
 ---------
@@ -744,9 +743,12 @@ Customer needs to build graphics features manually with below steps.
 	PREFERRED_PROVIDER_virtual/libgles3 = "imx-gpu-viv"
 	PREFERRED_PROVIDER_virtual/egl      = "imx-gpu-viv"
 	PREFERRED_PROVIDER_virtual/opencl-icd = "imx-gpu-viv"
-	PREFERRED_VERSION_weston = "11.0.3.imx"
+	PREFERRED_VERSION_weston = "12.0.3.imx"
 	PREFERRED_VERSION_wayland-protocols = "1.32.imx"
-	PREFERRED_VERSION_libdrm = "2.4.115.imx"
+	PREFERRED_VERSION_libdrm = "2.4.116.imx"
+	PREFERRED_VERSION_xwayland = "23.1.1.imx"
+
+	CUSTOMER_RECIPES:freescale-layer += 'xwayland'
 
 	CUSTOMER_RECIPES:fsl-bsp-release += 'imx-gpu-viv'
 	CUSTOMER_RECIPES:fsl-bsp-release += 'imx-gpu-viv-demos'
@@ -754,7 +756,6 @@ Customer needs to build graphics features manually with below steps.
 	CUSTOMER_RECIPES:fsl-bsp-release += 'libdrm'
 	CUSTOMER_RECIPES:fsl-bsp-release += 'weston'
 	CUSTOMER_RECIPES:fsl-bsp-release += 'wayland-protocols'
-	CUSTOMER_RECIPES:fsl-bsp-release += 'pugixml'
 
 	CUSTOMER_RECIPES:fsl-sdk-release += 'imx-gpu-sdk'
 	CUSTOMER_RECIPES:fsl-sdk-release += 'libxdg-shell'
@@ -782,6 +783,7 @@ Customer needs to build graphics features manually with below steps.
 	CUSTOMER_RECIPES:openembedded-layer += 'ccid'
 	CUSTOMER_RECIPES:openembedded-layer += 'freerdp'
 	CUSTOMER_RECIPES:openembedded-layer += 'pcsc-lite'
+	CUSTOMER_RECIPES:openembedded-layer += 'pugixml'
 
 	# Some gstream plugins require "commercial" be set in LICENSE_FLAGS_WHITELIST
 	# For example, gstreamer1.0-plugins-ugly-asf/gstreamer1.0-libav
@@ -811,7 +813,7 @@ and then build WRLinux image as usual.
 	CUSTOMER_RECIPES:meta-qoriq += 'secure-boot-qoriq'
 	CUSTOMER_RECIPES:meta-qoriq += 'u-boot-qoriq'
 	CUSTOMER_RECIPES:meta-qoriq += 'qoriq-atf'
-	CUSTOMER_RECIPES:meta-qoriq += 'dp-firmware-cadence'
+	CUSTOMER_RECIPES:freescale-layer += 'dp-firmware-cadence'
 	CUSTOMER_RECIPES:freescale-layer += 'qoriq-cst-native'
 	CUSTOMER_RECIPES:freescale-layer += 'uefi'
 	CUSTOMER_RECIPES:freescale-layer += 'rcw'
