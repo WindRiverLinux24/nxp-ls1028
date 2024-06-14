@@ -394,28 +394,28 @@ Note:
 6.5 ina220 & sa56004
 --------------------
 
-  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-0040/hwmon/hwmon2/name
+  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-3/3-0040/hwmon/hwmon3/name
    ina220
-  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-0040/hwmon/hwmon2/
+  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-3/3-0040/hwmon/hwmon3
    total 0
    curr1_input
-   device -> ../../../4-0040
-   n0_input
-   n1_input
+   device -> ../../../3-0040
+   in0_input
+   in1_input
    name
-   of_node -> ../../../../../../../../../firmware/devicetree/base/soc/i2c@2000000/i2c-
+   of_node -> ../../../../../../../../../firmware/devicetree/base/soc/i2c@2000000/i2c-mux@77/i2c@2/current-monitor@40
    power
    power1_input
    shunt_resistor
    subsystem -> ../../../../../../../../../class/hwmon
    uevent
 
-  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-5/5-004c/hwmon/hwmon3/name
+  #cat /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-004c/hwmon/hwmon2/name
    sa56004
-  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-5/5-004c/hwmon/hwmon3
+  #ls -l /sys/devices/platform/soc/2000000.i2c/i2c-0/i2c-4/4-004c/hwmon/hwmon2
    total 0
    alarms
-   device -> ../../../5-004c
+   device -> ../../../4-004c
    name
    of_node -> ../../../../../../../../../firmware/devicetree/base/soc/i2c@2000000/i2c-mux@77/i2c@3/temperature-sensor@4c
    power
@@ -796,6 +796,32 @@ Customer needs to build graphics features manually with below steps.
 
 Note: Customer needs to confirm the IP license of GPU related packages before integrating them in their own product.
 	  WindRiver only offers some demos to verify GPU and Display drivers.
+
+6.12 kexec/kdump
+----------------
+
+In order to enable kexec/kdump feature, please add below templates during creating BSP project.
+
+     --templates feature/kexec feature/kdump
+
+6.12.1 kexec
+------------
+
+	kexec -l  /root/Image --append="`cat /proc/cmdline`"
+	kexec -e
+
+6.12.2 kdump
+------------
+
+Add crashkernel=1024M to the kernel cmdline
+   kexec -p /root/Image --append="$your-bootcmd"
+   echo c > /proc/sysrq-trigger
+
+Note:
+Before booting the second kernel, add "maxcpus=1" to the boot parameter.
+
+For more detailed info about kdump, refer to Documentation/kdump/kdump.txt
+in the kernel source tree.
 
 
 7. Build Bootloader
