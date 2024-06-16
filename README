@@ -737,7 +737,8 @@ Customer needs to build graphics features manually with below steps.
 		mesa-demos \
 	"
 
-	PREFERRED_PROVIDER_virtual/libgl  = "imx-gpu-viv"
+	PREFERRED_PROVIDER_virtual/mesa = "mesa-gl"
+	PREFERRED_PROVIDER_virtual/libgl = "mesa-gl"
 	PREFERRED_PROVIDER_virtual/libgles1 = "imx-gpu-viv"
 	PREFERRED_PROVIDER_virtual/libgles2 = "imx-gpu-viv"
 	PREFERRED_PROVIDER_virtual/libgles3 = "imx-gpu-viv"
